@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="lv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mūzikas literatūra — Treniņš</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0c0a;
+    --surface: #161310;
+    --card: #1e1a16;
+    --border: #2e2820;
+    --accent: #c8a96e;
+    --accent2: #7eb8a4;
+    --text: #e8ddd0;
+    --muted: #7a6e62;
+    --danger: #c47a6a;
+    --success: #7eb8a4;
+    --radius: 4px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; padding: 40px 20px;
+  }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 0;
+  }
+  .container { width: 100%; max-width: 700px; position: relative; z-index: 1; }
+  header { text-align: center; margin-bottom: 48px; }
+  .logo-line { font-size: 11px; letter-spacing: 4px; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
+  h1 { font-family: 'Playfair Display', serif; font-size: clamp(28px,5vw,44px); font-weight: 400; line-height: 1.2; margin-bottom: 8px; }
+  h1 em { font-style: italic; color: var(--accent); }
+  .subtitle { font-size: 12px; color: var(--muted); letter-spacing: 1px; }
+
+  /* Setup */
+  #setup-screen { display: flex; flex-direction: column; gap: 32px; }
+  .setup-card { background: var(--card); border: 1px solid var(--border); padding: 28px; border-radius: var(--radius); }
+  .setup-label { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); margin-bottom: 16px; display: block; }
+  .count-options { display: flex; gap: 10px; flex-wrap: wrap; }
+  .count-btn { background: var(--surface); border: 1px solid var(--border); color: var(--muted); padding: 10px 20px; border-radius: var(--radius); cursor: pointer; font-family: 'DM Mono', monospace; font-size: 14px; transition: all 0.15s; }
+  .count-btn:hover { border-color: var(--accent); color: var(--text); }
+  .count-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+  .era-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .era-btn { background: var(--surface); border: 1px solid var(--border); color: var(--muted); padding: 8px 12px; border-radius: var(--radius); cursor: pointer; font-family: 'DM Mono', monospace; font-size: 11px; text-align: left; transition: all 0.15s; }
+  .era-btn:hover { border-color: var(--accent2); color: var(--text); }
+  .era-btn.active { border-color: var(--accent2); color: var(--accent2); background: rgba(126,184,164,0.08); }
+  .all-eras-btn { grid-column: 1 / -1; text-align: center; }
+  .start-btn { width: 100%; background: var(--accent); color: var(--bg); border: none; padding: 16px; font-family: 'Playfair Display', serif; font-size: 18px; font-style: italic; cursor: pointer; border-radius: var(--radius); transition: all 0.2s; }
+  .start-btn:hover { background: #d4b87e; transform: translateY(-1px); }
+
+  /* Quiz */
+  #quiz-screen { display: none; }
+  .progress-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; }
+  .progress-track { flex: 1; height: 2px; background: var(--border); border-radius: 1px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); transition: width 0.4s ease; }
+  .progress-label { font-size: 11px; color: var(--muted); white-space: nowrap; }
+  .question-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 20px; }
+  .question-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+  .question-num { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); }
+  .era-tag { font-size: 10px; color: var(--muted); padding: 3px 8px; border: 1px solid var(--border); border-radius: 20px; }
+  .player-area { padding: 28px 20px; text-align: center; }
+
+  /* Waveform */
+  .waveform { display: flex; align-items: center; justify-content: center; gap: 3px; height: 32px; margin-bottom: 16px; opacity: 0; transition: opacity 0.4s; }
+  .waveform.active { opacity: 1; }
+  .waveform span { display: block; width: 3px; background: var(--accent2); border-radius: 2px; height: 4px; }
+  .waveform.active span { animation: wave var(--d, 0.8s) ease-in-out infinite alternate; }
+  @keyframes wave { from { height: 4px; } to { height: 28px; } }
+
+  .play-btn { width: 72px; height: 72px; border-radius: 50%; background: var(--accent); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; transition: all 0.2s; }
+  .play-btn:hover { transform: scale(1.05); }
+  .play-btn.playing { animation: pulse 2s infinite; background: var(--accent2); }
+  @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(126,184,164,0.4); } 50% { box-shadow: 0 0 0 14px rgba(126,184,164,0); } }
+  .play-btn svg { width: 28px; height: 28px; fill: var(--bg); }
+  .player-hint { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+  .timer-row { display: flex; align-items: center; gap: 10px; }
+  .timer-bar { flex: 1; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .timer-fill { height: 100%; background: var(--accent2); width: 100%; }
+  .timer-label { font-size: 11px; color: var(--muted); min-width: 28px; text-align: right; }
+  .replay-btn { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 6px 14px; font-family: 'DM Mono', monospace; font-size: 11px; cursor: pointer; border-radius: var(--radius); margin-top: 12px; transition: all 0.15s; }
+  .replay-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+
+  .answer-area { padding: 0 20px 20px; }
+  .answer-input { width: 100%; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 14px 16px; font-family: 'DM Mono', monospace; font-size: 14px; border-radius: var(--radius); transition: border-color 0.15s; resize: none; min-height: 80px; }
+  .answer-input:focus { outline: none; border-color: var(--accent); }
+  .answer-input::placeholder { color: var(--muted); }
+  .nav-buttons { display: flex; gap: 12px; }
+  .btn-skip { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 12px 20px; font-family: 'DM Mono', monospace; font-size: 12px; cursor: pointer; border-radius: var(--radius); transition: all 0.15s; }
+  .btn-skip:hover { border-color: var(--muted); color: var(--text); }
+  .btn-next { flex: 1; background: var(--accent); border: none; color: var(--bg); padding: 12px 20px; font-family: 'Playfair Display', serif; font-size: 16px; font-style: italic; cursor: pointer; border-radius: var(--radius); transition: all 0.15s; }
+  .btn-next:hover { background: #d4b87e; }
+
+  /* Results */
+  #results-screen { display: none; }
+  .results-header { text-align: center; margin-bottom: 40px; }
+  .score-display { font-family: 'Playfair Display', serif; font-size: 80px; font-weight: 700; color: var(--accent); line-height: 1; margin-bottom: 8px; }
+  .score-sub { font-size: 12px; color: var(--muted); letter-spacing: 2px; }
+  .results-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 32px; }
+  .result-item { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; display: grid; grid-template-columns: 24px 1fr; gap: 12px; align-items: start; }
+  .result-item.correct { border-left: 3px solid var(--success); }
+  .result-item.wrong   { border-left: 3px solid var(--danger); }
+  .result-item.skipped { border-left: 3px solid var(--muted); }
+  .result-icon { font-size: 14px; margin-top: 1px; }
+  .result-correct-answer { font-size: 13px; color: var(--text); margin-bottom: 4px; }
+  .result-your-answer { font-size: 11px; color: var(--muted); }
+  .result-your-answer span { color: var(--danger); }
+  .restart-btn { width: 100%; background: transparent; border: 1px solid var(--accent); color: var(--accent); padding: 14px; font-family: 'Playfair Display', serif; font-size: 17px; font-style: italic; cursor: pointer; border-radius: var(--radius); transition: all 0.2s; }
+  .restart-btn:hover { background: var(--accent); color: var(--bg); }
+
+  /* Grade overlay */
+  .grade-overlay { position: fixed; inset: 0; background: rgba(14,12,10,0.93); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+  .grade-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; max-width: 520px; width: 100%; }
+  .grade-tag { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; }
+  .grade-answer-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; font-size: 14px; color: var(--text); line-height: 1.5; margin-bottom: 12px; }
+  .grade-your { font-size: 11px; color: var(--muted); margin-bottom: 20px; padding: 10px 14px; border-left: 2px solid var(--border); }
+  .grade-btns { display: flex; gap: 10px; }
+  .grade-yes { flex: 1; background: var(--success); border: none; color: var(--bg); padding: 14px; font-family: 'DM Mono', monospace; font-size: 13px; cursor: pointer; border-radius: var(--radius); font-weight: 500; }
+  .grade-no  { flex: 1; background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 14px; font-family: 'DM Mono', monospace; font-size: 13px; cursor: pointer; border-radius: var(--radius); }
+
+  /* Hidden YT player — audio plays, nothing visible */
+  .yt-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; pointer-events: none; left: -9999px; top: -9999px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="logo-line">Mūzikas literatūra · 2025/2026</div>
+    <h1>Klausies un <em>atpazīsti</em></h1>
+    <div class="subtitle">Eksāmena treniņš · 50 skaņdarbi</div>
+  </header>
+
+  <!-- SETUP -->
+  <div id="setup-screen">
+    <div class="setup-card">
+      <span class="setup-label">Cik skaņdarbi?</span>
+      <div class="count-options">
+        <button class="count-btn" data-count="5">5</button>
+        <button class="count-btn" data-count="10">10</button>
+        <button class="count-btn active" data-count="15">15</button>
+        <button class="count-btn" data-count="20">20</button>
+        <button class="count-btn" data-count="50">Visi 50</button>
+      </div>
+    </div>
+    <div class="setup-card">
+      <span class="setup-label">Laikmets / grupa</span>
+      <div class="era-grid">
+        <button class="era-btn all-eras-btn active" data-era="all">✦ Visi laikme­ti</button>
+        <button class="era-btn" data-era="0">Baroks</button>
+        <button class="era-btn" data-era="1">Klasicisms</button>
+        <button class="era-btn" data-era="2">Vācu/austr. romantisms</button>
+        <button class="era-btn" data-era="3">Franču romantisms</button>
+        <button class="era-btn" data-era="4">Itāļu romantisms</button>
+        <button class="era-btn" data-era="5">Nacionālais romantisms</button>
+        <button class="era-btn" data-era="6">Ārzemju modernisms</button>
+        <button class="era-btn" data-era="7">Latv. klasika/Vītola skola</button>
+        <button class="era-btn" data-era="8">Latv. laikmetīgā mūzika</button>
+      </div>
+    </div>
+    <button class="start-btn" id="start-btn">Sākt treniņu →</button>
+  </div>
+
+  <!-- QUIZ -->
+  <div id="quiz-screen">
+    <div class="progress-bar">
+      <span class="progress-label" id="prog-label">1 / 15</span>
+      <div class="progress-track"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+    </div>
+    <div class="question-card">
+      <div class="question-header">
+        <span class="question-num" id="q-num">Nr. 1</span>
+        <span class="era-tag" id="q-era-tag"></span>
+      </div>
+      <div class="player-area">
+        <div class="waveform" id="waveform">
+          <span style="--d:.7s"></span><span style="--d:.5s"></span><span style="--d:.9s"></span>
+          <span style="--d:.6s"></span><span style="--d:1.1s"></span><span style="--d:.4s"></span>
+          <span style="--d:.8s"></span><span style="--d:.6s"></span><span style="--d:1.0s"></span>
+          <span style="--d:.5s"></span><span style="--d:.7s"></span><span style="--d:.9s"></span>
+          <span style="--d:.6s"></span><span style="--d:.8s"></span><span style="--d:.5s"></span>
+        </div>
+        <button class="play-btn" id="play-btn" onclick="togglePlay()">
+          <svg id="play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+        <div class="player-hint" id="player-hint">Nospied, lai sāktu klausīties</div>
+        <div class="timer-row">
+          <div class="timer-bar"><div class="timer-fill" id="timer-fill"></div></div>
+          <div class="timer-label" id="timer-label">0:35</div>
+        </div>
+        <br>
+        <button class="replay-btn" id="replay-btn" onclick="replayAudio()" style="display:none">↺ Klausīties vēlreiz</button>
+      </div>
+      <div class="answer-area">
+        <textarea class="answer-input" id="answer-input" placeholder="Pieraksti: autors, skaņdarba nosaukums, daļa/numurs..."></textarea>
+      </div>
+    </div>
+    <div class="nav-buttons">
+      <button class="btn-skip" onclick="skipQuestion()">Izlaist</button>
+      <button class="btn-next" id="btn-next" onclick="nextQuestion()">Tālāk →</button>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results-screen">
+    <div class="results-header">
+      <div class="score-display" id="score-display">—</div>
+      <div class="score-sub" id="score-sub">PAREIZAS ATBILDES</div>
+    </div>
+    <div class="results-list" id="results-list"></div>
+    <button class="restart-btn" onclick="restart()">← Jauns treniņš</button>
+  </div>
+</div>
+
+<!-- Grade overlay -->
+<div class="grade-overlay" id="grade-overlay">
+  <div class="grade-card">
+    <div class="grade-tag">Pārbaud atbildi</div>
+    <div class="grade-answer-box" id="grade-correct-text"></div>
+    <div class="grade-your" id="grade-your-text"></div>
+    <div class="grade-btns">
+      <button class="grade-yes" onclick="gradeAnswer(true)">✓ Pareizi</button>
+      <button class="grade-no"  onclick="gradeAnswer(false)">✗ Kļūda</button>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden YouTube player — audio only, completely invisible -->
+<div class="yt-hidden" aria-hidden="true"><div id="yt-player"></div></div>
+
+<script>
+const WORKS = [
+  {era:0,eraName:"Baroks",label:"J.S. Bahs — Sv. Mateja pasija: II d. alta ārija (Erbarme Dich)",ytId:"BBeXF_lnj_M",start:0},
+  {era:0,eraName:"Baroks",label:"G.F. Hendelis — oratorija Mesija: III d. soprāna ārija (I know that my Redeemer liveth)",ytId:"qShczRbvO5E",start:40},
+  {era:1,eraName:"Klasicisms",label:"J. Haidns — 103. simfonija (Ar timpānu tremolo): IV d. g.p. (ar mežragu zelta gājienu)",ytId:"lo0k42Uxpe8",start:1488},
+  {era:1,eraName:"Klasicisms",label:"V.A. Mocarts — opera Dons Žuāns: Dž. duetīno ar Cerlīnu I cēl. 3.a. (Sniedz, daiļā, savu roku!)",ytId:"MzR7Kf4yqUI",start:168},
+  {era:1,eraName:"Klasicisms",label:"V.A. Mocarts — 40. simfonija: III d. menueta tēma",ytId:"_JAPx7_ra_A",start:1370},
+  {era:1,eraName:"Klasicisms",label:"L. van Bēthovens — 8. klaviersonāte: I d. g.p.",ytId:"AD1La6aUAng",start:135},
+  {era:1,eraName:"Klasicisms",label:"L. van Bēthovens — 5. simfonija: III d. pamattēma",ytId:"RKcAAA1O2sc",start:1041},
+  {era:2,eraName:"Vācu/austriešu romantisms",label:"F. Šūberts — dz. cikls Skaistā dzirnavniece: Ceļošana (nr. 1)",ytId:"zBAVutlfGOg",start:0},
+  {era:2,eraName:"Vācu/austriešu romantisms",label:"F. Šūberts — dz. cikls Ziemas ceļojums: Leijerkastnieks (nr. 24)",ytId:"sIIS-UgixGE",start:0},
+  {era:2,eraName:"Vācu/austriešu romantisms",label:"R. Šūmanis — klav. cikls Karnevāls: Florestāns",ytId:"IS1JnoM32gk",start:0},
+  {era:2,eraName:"Vācu/austriešu romantisms",label:"R. Vāgners — opera Tannheizers: svētceļnieku vadtēma (Uvertīras 1. tēma)",ytId:"23wJJyfZePI",start:19},
+  {era:2,eraName:"Vācu/austriešu romantisms",label:"R. Vāgners — opera Loengrīns: III cēl. orķ. ievads: pamattēma",ytId:"qy2k_xnE2XQ",start:0},
+  {era:2,eraName:"Vācu/austriešu romantisms",label:"J. Brāmss — 4. simfonija: IV d. (variāciju tēma)",ytId:"WZGWB93-mmI",start:0},
+  {era:2,eraName:"Vācu/austriešu romantisms",label:"G. Mālers — 1. simfonija: III d. vidusposms (groteska, krogus mūzikas epizode)",ytId:"4XbHLFkg_Mw",start:1653},
+  {era:3,eraName:"Franču romantisms",label:"H. Berliozs — Fantastiskā simfonija: V d. Sapnis sabata naktī",ytId:"cao6WyF-61s",start:0},
+  {era:3,eraName:"Franču romantisms",label:"Ž. Bizē — opera Karmena: K. segidilja I cēl.",ytId:"sHjnVz7Ayyw",start:0},
+  {era:4,eraName:"Itāļu romantisms/verisms",label:"Dž. Verdi — opera Traviata: Violetas skats un ārija I cēl.",ytId:"_uzkxQMh05I",start:0},
+  {era:4,eraName:"Itāļu romantisms/verisms",label:"Dž. Verdi — opera Aīda: A. un Radamesa pēdējais duets IV cēl. 2.a. (O terra..., Ges dur)",ytId:"_r9-FBavcgA",start:45},
+  {era:4,eraName:"Itāļu romantisms/verisms",label:"Dž. Pučīni — opera Toska: Kavaradosi monologs III (ārija E lucevan le stelle)",ytId:"5-AF1T4OehM",start:0},
+  {era:5,eraName:"Nacionālais romantisms",label:"F. Šopēns — Polonēze klav. A dur",ytId:"hbnunexhlXM",start:0},
+  {era:5,eraName:"Nacionālais romantisms",label:"F. Lists — simf. poēma Prelīdes: g.p.",ytId:"bMi6DnMKfLo",start:145},
+  {era:5,eraName:"Nacionālais romantisms",label:"A. Dvoržāks — 9. simfonija No Jaunās pasaules: II d. pamattēma",ytId:"jOofzffyDSA",start:65},
+  {era:5,eraName:"Nacionālais romantisms",label:"E. Grīgs — Klavierkoncerts: I d. ievads",ytId:"I80-RoDvKRs",start:40},
+  {era:5,eraName:"Nacionālais romantisms",label:"M. Musorgskis — opera Boriss Godunovs: Slavas koris Prol. 2.a. (ar zvaniem ievadā)",ytId:"2d3eSXPmR3M",start:110},
+  {era:5,eraName:"Nacionālais romantisms",label:"P. Čaikovskis — 6. simfonija: I d. blakustēma (gaišais sapnis, romantiskais ideāls)",ytId:"C1fs19um8ZU",start:270},
+  {era:5,eraName:"Nacionālais romantisms",label:"P. Čaikovskis — 6. simfonija: IV d. pamattēma (lēnais fināls, samierināšanās ar traģēdiju)",ytId:"C1fs19um8ZU",start:2070},
+  {era:5,eraName:"Nacionālais romantisms",label:"S. Rahmaņinovs — 2. klavierkoncerts: I d. ievads un g.p.",ytId:"rEGKB9BmhLo",start:0},
+  {era:5,eraName:"Nacionālais romantisms",label:"Ž. Sibēliuss — Vijolkoncerts: I d. g.p. (Somijas dabas skaistuma rosināta)",ytId:"o5tHKDMBMws",start:25},
+  {era:6,eraName:"Ārzemju modernisms",label:"K.A. Debisī — klavierprelūdija Nogrimusī katedrāle: pamattēma (paralēli beztercu akordi)",ytId:"FcnYbpJhpN4",start:1832},
+  {era:6,eraName:"Ārzemju modernisms",label:"M. Ravels — Bolero simfoniskajam orķestrim",ytId:"cmNEvSFWftc",start:0},
+  {era:6,eraName:"Ārzemju modernisms",label:"I. Stravinskis — balets Svētpavasaris: fināls, Lielā svētdeja",ytId:"5UJOaGIhG7A",start:1735},
+  {era:6,eraName:"Ārzemju modernisms",label:"D. Šostakovičs — 15. simfonija: I d. blakustēma (ar Rosīni citātu)",ytId:"UR7kjPEj1rQ",start:85},
+  {era:6,eraName:"Ārzemju modernisms",label:"V. Ļutoslavskis — Sēru mūzika (Bartoka piemiņai) stīgu orķ.: Prologs (tritoni un pustoņi)",ytId:"GPOqPBU0tT8",start:0},
+  {era:6,eraName:"Ārzemju modernisms",label:"A. Perts — Ādama žēlabas (Adam's Lament) jauktajam korim un st. orķ.",ytId:"zbxGlcsJNmQ",start:0},
+  {era:7,eraName:"Latv. klasika / Vītola skola",label:"Jurjānu Andrejs — simf. svīta Latvju dejas: III d. Nabagu deja: vidusdaļa (Pieci gadi kalpiņš biju)",ytId:"VV0W7QKG_xU",start:58},
+  {era:7,eraName:"Latv. klasika / Vītola skola",label:"J. Vītols — korbalāde Gaismas pils (JVLMA iestādes himna)",ytId:"MkPGcigpmGw",start:0},
+  {era:7,eraName:"Latv. klasika / Vītola skola",label:"J. Vītols — Viļņu dziesma klav.",ytId:"_C99xtWhIlw",start:0},
+  {era:7,eraName:"Latv. klasika / Vītola skola",label:"E. Dārziņš — kordziesma Mēness starus stīgo",ytId:"Nnf2WqLzRsI",start:0},
+  {era:7,eraName:"Latv. klasika / Vītola skola",label:"E. Melngailis — Jāņuvakars korim",ytId:"BLmDFfNOP-A",start:0},
+  {era:7,eraName:"Latv. klasika / Vītola skola",label:"Alfrēds Kalniņš — Balāde klav. (b moll): ievads un g.p. (0:00 un 0:35)",ytId:"nl9MdbuWsxc",start:1},
+  {era:7,eraName:"Latv. klasika / Vītola skola",label:"Alfrēds Kalniņš — opera Baņuta: B. un Vižuta duets III cēl. (Nāc, manu liego ilgu tēls!)",ytId:"kk5DWXl6fW4",start:2174},
+  {era:7,eraName:"Latv. klasika / Vītola skola",label:"Jānis Mediņš — opera Uguns un nakts: Spīdolas ariozo I cēl. (Es esmu es!)",ytId:"6Rlt4zy3Jr0",start:0},
+  {era:8,eraName:"Latv. laikmetīgā mūzika",label:"L. Garūta — kantāte Dievs, Tava zeme deg!: Tēvreize (lūgšana Mūsu Tēvs debesīs)",ytId:"qC_ORAKOiVE",start:57},
+  {era:8,eraName:"Latv. laikmetīgā mūzika",label:"J. Ivanovs — Ceturtā simfonija Atlantīda: II d. pamattēma (ar siev. kori bez vārdiem)",ytId:"TZN83Q11GZg",start:978},
+  {era:8,eraName:"Latv. laikmetīgā mūzika",label:"M. Zariņš — Partita baroka stilā: fināls (6. d.) Pavana (neoklasicisms, džeza elementi)",ytId:"aqyXJ39b6xA",start:575},
+  {era:8,eraName:"Latv. laikmetīgā mūzika",label:"R. Kalsons — Vijolkoncerts: I d. galv. p. (solovijolei tremolo paralēlās tercās lejup)",ytId:"pQk3lQQDT9I",start:12},
+  {era:8,eraName:"Latv. laikmetīgā mūzika",label:"P. Dambis — kora cikls Jūras dziesmas: III d. Zvan' Rīgā, Jelgavā (sonorika, aleatorika)",ytId:"gh2IAH4BJJc",start:212},
+  {era:8,eraName:"Latv. laikmetīgā mūzika",label:"P. Vasks — Musica dolorosa st. orķ. (māsas piemiņai): vidusdaļa (pulsa jēdziens)",ytId:"JYVf4fYCeV0",start:211},
+  {era:8,eraName:"Latv. laikmetīgā mūzika",label:"P. Plakidis — trio Veltījums Haidnam flautai, čellam un klavierēm (Haidna citāti)",ytId:"MT2X2J3L2jE",start:0},
+  {era:8,eraName:"Latv. laikmetīgā mūzika",label:"S. Ratniece — Saline (Sālsezers) jauktajam korim (sonorika, aleatorika, koris elpo, čukst)",ytId:"MG0fCzLz9m4",start:0},
+];
+
+let queue=[],currentIdx=0,answers=[];
+let selectedCount=15,selectedEra='all';
+let player=null,isPlaying=false;
+let timerTimeout=null,countdownInterval=null;
+const PLAY_SEC=35;
+
+document.querySelectorAll('.count-btn').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.count-btn').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active'); selectedCount=parseInt(b.dataset.count);
+}));
+document.querySelectorAll('.era-btn').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.era-btn').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active'); selectedEra=b.dataset.era;
+}));
+document.getElementById('start-btn').addEventListener('click',startQuiz);
+
+function startQuiz(){
+  let pool=selectedEra==='all'?[...WORKS]:WORKS.filter(w=>w.era==selectedEra);
+  if(!pool.length){alert("Nav skaņdarbu šajā grupā.");return;}
+  shuffle(pool);
+  queue=pool.slice(0,Math.min(selectedCount,pool.length));
+  currentIdx=0;answers=[];
+  document.getElementById('setup-screen').style.display='none';
+  document.getElementById('quiz-screen').style.display='block';
+  loadYT();
+  loadQuestion();
+}
+
+function loadYT(){
+  if(window.YT&&window.YT.Player){initPlayer();return;}
+  const s=document.createElement('script');
+  s.src='https://www.youtube.com/iframe_api';
+  document.head.appendChild(s);
+}
+window.onYouTubeIframeAPIReady=function(){initPlayer();};
+
+function initPlayer(){
+  const w=queue[0];
+  player=new YT.Player('yt-player',{
+    height:'1',width:'1',
+    videoId:w.ytId,
+    playerVars:{autoplay:0,controls:0,start:w.start,origin:window.location.origin},
+    events:{onStateChange:e=>{if(e.data===YT.PlayerState.ENDED)stopPlayback();}}
+  });
+}
+
+function loadQuestion(){
+  const w=queue[currentIdx];
+  document.getElementById('q-num').textContent=`Nr. ${currentIdx+1}`;
+  document.getElementById('q-era-tag').textContent=w.eraName;
+  document.getElementById('answer-input').value='';
+  document.getElementById('prog-label').textContent=`${currentIdx+1} / ${queue.length}`;
+  document.getElementById('prog-fill').style.width=`${currentIdx/queue.length*100}%`;
+  document.getElementById('player-hint').textContent='Nospied, lai sāktu klausīties';
+  document.getElementById('btn-next').textContent=currentIdx===queue.length-1?'Skatīt rezultātus →':'Tālāk →';
+  document.getElementById('replay-btn').style.display='none';
+  document.getElementById('timer-label').textContent='0:35';
+  resetBar(); stopPlayback(); wave(false);
+  if(player&&player.cueVideoById) player.cueVideoById({videoId:w.ytId,startSeconds:w.start});
+}
+
+function resetBar(){
+  const f=document.getElementById('timer-fill');
+  f.style.transition='none'; f.style.width='100%';
+}
+
+function togglePlay(){isPlaying?stopPlayback():startPlayback();}
+
+function startPlayback(){
+  if(!player)return;
+  isPlaying=true; wave(true);
+  const btn=document.getElementById('play-btn');
+  btn.classList.add('playing');
+  btn.innerHTML='<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
+  document.getElementById('player-hint').textContent='Klausies…';
+  player.seekTo(queue[currentIdx].start,true); player.playVideo();
+
+  const f=document.getElementById('timer-fill');
+  f.style.transition='none'; f.style.width='100%';
+  setTimeout(()=>{ f.style.transition=`width ${PLAY_SEC}s linear`; f.style.width='0%'; },80);
+
+  let rem=PLAY_SEC;
+  document.getElementById('timer-label').textContent=fmt(rem);
+  clearInterval(countdownInterval);
+  countdownInterval=setInterval(()=>{
+    rem--; document.getElementById('timer-label').textContent=fmt(Math.max(rem,0));
+    if(rem<=0)clearInterval(countdownInterval);
+  },1000);
+
+  clearTimeout(timerTimeout);
+  timerTimeout=setTimeout(()=>{
+    stopPlayback();
+    document.getElementById('player-hint').textContent='35 sek. beidzās — pieraksti atbildi!';
+    document.getElementById('replay-btn').style.display='inline-block';
+  },PLAY_SEC*1000);
+}
+
+function stopPlayback(){
+  isPlaying=false;
+  clearTimeout(timerTimeout); clearInterval(countdownInterval);
+  if(player&&player.pauseVideo)player.pauseVideo();
+  wave(false);
+  const btn=document.getElementById('play-btn');
+  btn.classList.remove('playing');
+  btn.innerHTML='<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
+}
+
+function replayAudio(){
+  document.getElementById('replay-btn').style.display='none';
+  resetBar(); startPlayback();
+}
+
+function wave(on){ document.getElementById('waveform').classList.toggle('active',on); }
+function fmt(s){ return '0:'+String(s).padStart(2,'0'); }
+
+function skipQuestion(){
+  answers.push({work:queue[currentIdx],answer:'',correct:false,skipped:true});
+  advance();
+}
+
+function nextQuestion(){
+  const ans=document.getElementById('answer-input').value.trim();
+  stopPlayback();
+  const w=queue[currentIdx];
+  document.getElementById('grade-correct-text').textContent=w.label;
+  document.getElementById('grade-your-text').textContent=ans?`Tava atbilde: "${ans}"`:'Atbilde netika ierakstīta.';
+  document.getElementById('grade-overlay').style.display='flex';
+  window._pending={work:w,answer:ans};
+}
+
+function gradeAnswer(ok){
+  document.getElementById('grade-overlay').style.display='none';
+  answers.push({...window._pending,correct:ok,skipped:false});
+  advance();
+}
+
+function advance(){
+  currentIdx++;
+  if(currentIdx>=queue.length)showResults(); else loadQuestion();
+}
+
+function showResults(){
+  document.getElementById('quiz-screen').style.display='none';
+  document.getElementById('results-screen').style.display='block';
+  const ok=answers.filter(a=>a.correct).length,tot=answers.length;
+  document.getElementById('score-display').textContent=`${ok}/${tot}`;
+  document.getElementById('score-sub').textContent=`PAREIZAS ATBILDES · ${Math.round(ok/tot*100)}%`;
+  const list=document.getElementById('results-list');
+  list.innerHTML='';
+  answers.forEach(a=>{
+    const cls=a.skipped?'skipped':a.correct?'correct':'wrong';
+    const icon=a.skipped?'—':a.correct?'✓':'✗';
+    list.innerHTML+=`<div class="result-item ${cls}"><div class="result-icon">${icon}</div><div>
+      <div class="result-correct-answer">${a.work.label}</div>
+      ${!a.correct&&!a.skipped?`<div class="result-your-answer">Tava atbilde: <span>"${a.answer||'(tukšs)'}"</span></div>`:''}
+      ${a.skipped?'<div class="result-your-answer">Izlaists</div>':''}
+    </div></div>`;
+  });
+}
+
+function restart(){
+  document.getElementById('results-screen').style.display='none';
+  document.getElementById('setup-screen').style.display='flex';
+  stopPlayback();
+}
+
+function shuffle(a){
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+}
+</script>
+</body>
+</html>
