@@ -61,9 +61,13 @@
   .progress-fill { height: 100%; background: var(--accent); transition: width 0.4s ease; }
   .progress-label { font-size: 11px; color: var(--muted); white-space: nowrap; }
   .question-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 20px; }
-  .question-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+  .question-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border); gap: 12px; }
   .question-num { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); }
-  .era-tag { font-size: 10px; color: var(--muted); padding: 3px 8px; border: 1px solid var(--border); border-radius: 20px; }
+  .era-wrap { display: flex; align-items: center; gap: 8px; }
+  .era-toggle { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 6px 10px; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; border-radius: 20px; transition: all 0.15s; }
+  .era-toggle:hover { border-color: var(--accent2); color: var(--accent2); }
+  .era-tag { font-size: 10px; color: var(--muted); padding: 3px 8px; border: 1px solid var(--border); border-radius: 20px; display: none; }
+  .era-tag.visible { display: inline-flex; }
   .player-area { padding: 28px 20px; text-align: center; }
 
   /* Waveform */
@@ -85,6 +89,9 @@
   .timer-label { font-size: 11px; color: var(--muted); min-width: 28px; text-align: right; }
   .replay-btn { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 6px 14px; font-family: 'DM Mono', monospace; font-size: 11px; cursor: pointer; border-radius: var(--radius); margin-top: 12px; transition: all 0.15s; }
   .replay-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+  .yt-link { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 6px 12px; font-family: 'DM Mono', monospace; font-size: 11px; cursor: pointer; border-radius: var(--radius); margin-top: 10px; display: none; }
+  .yt-link:hover { border-color: var(--accent); color: var(--accent); }
+  .player-error { font-size: 11px; color: var(--danger); margin-top: 10px; display: none; }
 
   .answer-area { padding: 0 20px 20px; }
   .answer-input { width: 100%; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 14px 16px; font-family: 'DM Mono', monospace; font-size: 14px; border-radius: var(--radius); transition: border-color 0.15s; resize: none; min-height: 80px; }
@@ -113,15 +120,40 @@
   .restart-btn { width: 100%; background: transparent; border: 1px solid var(--accent); color: var(--accent); padding: 14px; font-family: 'Playfair Display', serif; font-size: 17px; font-style: italic; cursor: pointer; border-radius: var(--radius); transition: all 0.2s; }
   .restart-btn:hover { background: var(--accent); color: var(--bg); }
 
-  /* Grade overlay */
-  .grade-overlay { position: fixed; inset: 0; background: rgba(14,12,10,0.93); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
-  .grade-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; max-width: 520px; width: 100%; }
-  .grade-tag { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; }
-  .grade-answer-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; font-size: 14px; color: var(--text); line-height: 1.5; margin-bottom: 12px; }
-  .grade-your { font-size: 11px; color: var(--muted); margin-bottom: 20px; padding: 10px 14px; border-left: 2px solid var(--border); }
-  .grade-btns { display: flex; gap: 10px; }
-  .grade-yes { flex: 1; background: var(--success); border: none; color: var(--bg); padding: 14px; font-family: 'DM Mono', monospace; font-size: 13px; cursor: pointer; border-radius: var(--radius); font-weight: 500; }
-  .grade-no  { flex: 1; background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 14px; font-family: 'DM Mono', monospace; font-size: 13px; cursor: pointer; border-radius: var(--radius); }
+  /* Review */
+  #review-screen { display: none; }
+  .review-hint { font-size: 12px; color: var(--muted); text-align: center; margin: -20px 0 24px; }
+  .review-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+  .review-item { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; display: grid; grid-template-columns: 28px 1fr 170px; gap: 12px; align-items: center; }
+  .review-item.correct { border-left: 3px solid var(--success); }
+  .review-item.wrong { border-left: 3px solid var(--danger); }
+  .review-index { font-size: 11px; color: var(--muted); }
+  .review-answers { display: flex; flex-direction: column; gap: 6px; }
+  .review-correct { font-size: 13px; color: var(--text); }
+  .review-your { font-size: 11px; color: var(--muted); }
+  .review-your span { color: var(--danger); }
+  .review-controls { display: flex; gap: 6px; justify-content: flex-end; }
+  .review-btn { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 8px 10px; font-family: 'DM Mono', monospace; font-size: 11px; cursor: pointer; border-radius: var(--radius); transition: all 0.15s; white-space: nowrap; }
+  .review-btn.active { background: var(--accent2); color: var(--bg); border-color: var(--accent2); }
+  .review-btn.deny.active { background: var(--danger); border-color: var(--danger); }
+
+  /* Stats */
+  .stats-block { margin-top: 36px; }
+  .stats-title { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
+  .stats-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+  .stats-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+  .stats-label { font-size: 11px; color: var(--muted); margin-bottom: 10px; }
+  .stats-list { display: flex; flex-direction: column; gap: 8px; }
+  .stats-line { font-size: 12px; color: var(--text); display: flex; justify-content: space-between; gap: 10px; }
+  .stats-line span { color: var(--muted); }
+  @media (max-width: 540px){
+    .review-item { grid-template-columns: 1fr; }
+    .review-controls { justify-content: flex-start; flex-wrap: wrap; }
+  }
+  @media (min-width: 640px){
+    .review-item { grid-template-columns: 28px 1fr 220px; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+  }
 
   /* Hidden YT player — audio plays, nothing visible */
   .yt-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; pointer-events: none; left: -9999px; top: -9999px; }
@@ -174,7 +206,10 @@
     <div class="question-card">
       <div class="question-header">
         <span class="question-num" id="q-num">Nr. 1</span>
-        <span class="era-tag" id="q-era-tag"></span>
+        <div class="era-wrap">
+          <button class="era-toggle" id="era-toggle" onclick="toggleEra()">Rādīt laikmetu</button>
+          <span class="era-tag" id="q-era-tag"></span>
+        </div>
       </div>
       <div class="player-area">
         <div class="waveform" id="waveform">
@@ -194,6 +229,8 @@
         </div>
         <br>
         <button class="replay-btn" id="replay-btn" onclick="replayAudio()" style="display:none">↺ Klausīties vēlreiz</button>
+        <div class="player-error" id="player-error">Šo ierakstu nevar atskaņot iebūvēti. Atver YouTube.</div>
+        <button class="yt-link" id="open-yt-btn" onclick="openOnYT()">Atvērt YouTube</button>
       </div>
       <div class="answer-area">
         <textarea class="answer-input" id="answer-input" placeholder="Pieraksti: autors, skaņdarba nosaukums, daļa/numurs..."></textarea>
@@ -205,6 +242,17 @@
     </div>
   </div>
 
+  <!-- REVIEW -->
+  <div id="review-screen">
+    <div class="results-header">
+      <div class="score-display" id="review-score">0/0</div>
+      <div class="score-sub" id="review-sub">IESKAITĪTS ŠOBRĪD</div>
+    </div>
+    <div class="review-hint">Tava atbilde · pareizā atbilde · izvēlies, ko ieskaitīt.</div>
+    <div class="review-list" id="review-list"></div>
+    <button class="start-btn" id="finish-review-btn" onclick="finishReview()">Aprēķināt rezultātu →</button>
+  </div>
+
   <!-- RESULTS -->
   <div id="results-screen">
     <div class="results-header">
@@ -212,20 +260,20 @@
       <div class="score-sub" id="score-sub">PAREIZAS ATBILDES</div>
     </div>
     <div class="results-list" id="results-list"></div>
-    <button class="restart-btn" onclick="restart()">← Jauns treniņš</button>
-  </div>
-</div>
-
-<!-- Grade overlay -->
-<div class="grade-overlay" id="grade-overlay">
-  <div class="grade-card">
-    <div class="grade-tag">Pārbaud atbildi</div>
-    <div class="grade-answer-box" id="grade-correct-text"></div>
-    <div class="grade-your" id="grade-your-text"></div>
-    <div class="grade-btns">
-      <button class="grade-yes" onclick="gradeAnswer(true)">✓ Pareizi</button>
-      <button class="grade-no"  onclick="gradeAnswer(false)">✗ Kļūda</button>
+    <div class="stats-block">
+      <div class="stats-title">Statistika</div>
+      <div class="stats-grid">
+        <div class="stats-card">
+          <div class="stats-label">Pēdējās sesijas</div>
+          <div class="stats-list" id="stats-sessions"></div>
+        </div>
+        <div class="stats-card">
+          <div class="stats-label">Vājākās tēmas</div>
+          <div class="stats-list" id="stats-weak"></div>
+        </div>
+      </div>
     </div>
+    <button class="restart-btn" onclick="restart()">← Jauns treniņš</button>
   </div>
 </div>
 
@@ -237,8 +285,8 @@ const WORKS = [
   {era:0,eraName:"Baroks",label:"J.S. Bahs — Sv. Mateja pasija: II d. alta ārija (Erbarme Dich)",ytId:"BBeXF_lnj_M",start:0},
   {era:0,eraName:"Baroks",label:"G.F. Hendelis — oratorija Mesija: III d. soprāna ārija (I know that my Redeemer liveth)",ytId:"qShczRbvO5E",start:40},
   {era:1,eraName:"Klasicisms",label:"J. Haidns — 103. simfonija (Ar timpānu tremolo): IV d. g.p. (ar mežragu zelta gājienu)",ytId:"lo0k42Uxpe8",start:1488},
-  {era:1,eraName:"Klasicisms",label:"V.A. Mocarts — opera Dons Žuāns: Dž. duetīno ar Cerlīnu I cēl. 3.a. (Sniedz, daiļā, savu roku!)",ytId:"MzR7Kf4yqUI",start:168},
-  {era:1,eraName:"Klasicisms",label:"V.A. Mocarts — 40. simfonija: III d. menueta tēma",ytId:"_JAPx7_ra_A",start:1370},
+  {era:1,eraName:"Klasicisms",label:"V.A. Mocarts — opera Dons Žuāns: Dž. duetīno ar Cerlīnu I cēl. 3.a. (Sniedz, daiļā, savu roku!)",ytId:"iJnJjpMdT3Y",start:169},
+  {era:1,eraName:"Klasicisms",label:"V.A. Mocarts — 40. simfonija: III d. menueta tēma",ytId:"_JAPx7_ra_A",start:1807},
   {era:1,eraName:"Klasicisms",label:"L. van Bēthovens — 8. klaviersonāte: I d. g.p.",ytId:"AD1La6aUAng",start:135},
   {era:1,eraName:"Klasicisms",label:"L. van Bēthovens — 5. simfonija: III d. pamattēma",ytId:"RKcAAA1O2sc",start:1041},
   {era:2,eraName:"Vācu/austriešu romantisms",label:"F. Šūberts — dz. cikls Skaistā dzirnavniece: Ceļošana (nr. 1)",ytId:"zBAVutlfGOg",start:0},
@@ -254,19 +302,19 @@ const WORKS = [
   {era:4,eraName:"Itāļu romantisms/verisms",label:"Dž. Verdi — opera Aīda: A. un Radamesa pēdējais duets IV cēl. 2.a. (O terra..., Ges dur)",ytId:"_r9-FBavcgA",start:45},
   {era:4,eraName:"Itāļu romantisms/verisms",label:"Dž. Pučīni — opera Toska: Kavaradosi monologs III (ārija E lucevan le stelle)",ytId:"5-AF1T4OehM",start:0},
   {era:5,eraName:"Nacionālais romantisms",label:"F. Šopēns — Polonēze klav. A dur",ytId:"hbnunexhlXM",start:0},
-  {era:5,eraName:"Nacionālais romantisms",label:"F. Lists — simf. poēma Prelīdes: g.p.",ytId:"bMi6DnMKfLo",start:145},
-  {era:5,eraName:"Nacionālais romantisms",label:"A. Dvoržāks — 9. simfonija No Jaunās pasaules: II d. pamattēma",ytId:"jOofzffyDSA",start:65},
-  {era:5,eraName:"Nacionālais romantisms",label:"E. Grīgs — Klavierkoncerts: I d. ievads",ytId:"I80-RoDvKRs",start:40},
-  {era:5,eraName:"Nacionālais romantisms",label:"M. Musorgskis — opera Boriss Godunovs: Slavas koris Prol. 2.a. (ar zvaniem ievadā)",ytId:"2d3eSXPmR3M",start:110},
+  {era:5,eraName:"Nacionālais romantisms",label:"F. Lists — simf. poēma Prelīdes: g.p.",ytId:"IC20YIllemg",start:146},
+  {era:5,eraName:"Nacionālais romantisms",label:"A. Dvoržāks — 9. simfonija No Jaunās pasaules: II d. pamattēma",ytId:"h3o5RzHGsp4",start:65},
+  {era:5,eraName:"Nacionālais romantisms",label:"E. Grīgs — Klavierkoncerts: I d. ievads",ytId:"liFdIN2vUr4",start:41},
+  {era:5,eraName:"Nacionālais romantisms",label:"M. Musorgskis — opera Boriss Godunovs: Slavas koris Prol. 2.a. (ar zvaniem ievadā)",ytId:"UEBq-gsdI58",start:111},
   {era:5,eraName:"Nacionālais romantisms",label:"P. Čaikovskis — 6. simfonija: I d. blakustēma (gaišais sapnis, romantiskais ideāls)",ytId:"C1fs19um8ZU",start:270},
   {era:5,eraName:"Nacionālais romantisms",label:"P. Čaikovskis — 6. simfonija: IV d. pamattēma (lēnais fināls, samierināšanās ar traģēdiju)",ytId:"C1fs19um8ZU",start:2070},
-  {era:5,eraName:"Nacionālais romantisms",label:"S. Rahmaņinovs — 2. klavierkoncerts: I d. ievads un g.p.",ytId:"rEGKB9BmhLo",start:0},
-  {era:5,eraName:"Nacionālais romantisms",label:"Ž. Sibēliuss — Vijolkoncerts: I d. g.p. (Somijas dabas skaistuma rosināta)",ytId:"o5tHKDMBMws",start:25},
+  {era:5,eraName:"Nacionālais romantisms",label:"S. Rahmaņinovs — 2. klavierkoncerts: I d. ievads un g.p.",ytId:"u9QLiefnoDE",start:0},
+  {era:5,eraName:"Nacionālais romantisms",label:"Ž. Sibēliuss — Vijolkoncerts: I d. g.p. (Somijas dabas skaistuma rosināta)",ytId:"J0w0t4Qn6LY",start:25},
   {era:6,eraName:"Ārzemju modernisms",label:"K.A. Debisī — klavierprelūdija Nogrimusī katedrāle: pamattēma (paralēli beztercu akordi)",ytId:"FcnYbpJhpN4",start:1832},
   {era:6,eraName:"Ārzemju modernisms",label:"M. Ravels — Bolero simfoniskajam orķestrim",ytId:"cmNEvSFWftc",start:0},
-  {era:6,eraName:"Ārzemju modernisms",label:"I. Stravinskis — balets Svētpavasaris: fināls, Lielā svētdeja",ytId:"5UJOaGIhG7A",start:1735},
+  {era:6,eraName:"Ārzemju modernisms",label:"I. Stravinskis — balets Svētpavasaris: fināls, Lielā svētdeja",ytId:"-AwJVunm42w",start:1736},
   {era:6,eraName:"Ārzemju modernisms",label:"D. Šostakovičs — 15. simfonija: I d. blakustēma (ar Rosīni citātu)",ytId:"UR7kjPEj1rQ",start:85},
-  {era:6,eraName:"Ārzemju modernisms",label:"V. Ļutoslavskis — Sēru mūzika (Bartoka piemiņai) stīgu orķ.: Prologs (tritoni un pustoņi)",ytId:"GPOqPBU0tT8",start:0},
+  {era:6,eraName:"Ārzemju modernisms",label:"V. Ļutoslavskis — Sēru mūzika (Bartoka piemiņai) stīgu orķ.: Prologs (tritoni un pustoņi)",ytId:"4JpqUGoPx2M",start:0},
   {era:6,eraName:"Ārzemju modernisms",label:"A. Perts — Ādama žēlabas (Adam's Lament) jauktajam korim un st. orķ.",ytId:"zbxGlcsJNmQ",start:0},
   {era:7,eraName:"Latv. klasika / Vītola skola",label:"Jurjānu Andrejs — simf. svīta Latvju dejas: III d. Nabagu deja: vidusdaļa (Pieci gadi kalpiņš biju)",ytId:"VV0W7QKG_xU",start:58},
   {era:7,eraName:"Latv. klasika / Vītola skola",label:"J. Vītols — korbalāde Gaismas pils (JVLMA iestādes himna)",ytId:"MkPGcigpmGw",start:0},
@@ -288,7 +336,8 @@ const WORKS = [
 
 let queue=[],currentIdx=0,answers=[];
 let selectedCount=15,selectedEra='all';
-let player=null,isPlaying=false;
+let player=null,isPlaying=false,playerReady=false;
+let currentYTUrl='';
 let timerTimeout=null,countdownInterval=null;
 const PLAY_SEC=35;
 
@@ -309,6 +358,8 @@ function startQuiz(){
   queue=pool.slice(0,Math.min(selectedCount,pool.length));
   currentIdx=0;answers=[];
   document.getElementById('setup-screen').style.display='none';
+  document.getElementById('review-screen').style.display='none';
+  document.getElementById('results-screen').style.display='none';
   document.getElementById('quiz-screen').style.display='block';
   loadYT();
   loadQuestion();
@@ -324,11 +375,18 @@ window.onYouTubeIframeAPIReady=function(){initPlayer();};
 
 function initPlayer(){
   const w=queue[0];
+  const origin=(location.protocol==='http:'||location.protocol==='https:')?location.origin:undefined;
+  const playerVars={autoplay:0,controls:0,start:w.start,playsinline:1};
+  if(origin) playerVars.origin=origin;
   player=new YT.Player('yt-player',{
     height:'1',width:'1',
     videoId:w.ytId,
-    playerVars:{autoplay:0,controls:0,start:w.start,origin:window.location.origin},
-    events:{onStateChange:e=>{if(e.data===YT.PlayerState.ENDED)stopPlayback();}}
+    playerVars,
+    events:{
+      onReady:()=>{playerReady=true; cueCurrent();},
+      onStateChange:e=>{if(e.data===YT.PlayerState.ENDED)stopPlayback();},
+      onError:()=>{showPlayerError('Šo ierakstu nevar atskaņot iebūvēti. Atver YouTube.');}
+    }
   });
 }
 
@@ -336,6 +394,7 @@ function loadQuestion(){
   const w=queue[currentIdx];
   document.getElementById('q-num').textContent=`Nr. ${currentIdx+1}`;
   document.getElementById('q-era-tag').textContent=w.eraName;
+  setEraVisible(false);
   document.getElementById('answer-input').value='';
   document.getElementById('prog-label').textContent=`${currentIdx+1} / ${queue.length}`;
   document.getElementById('prog-fill').style.width=`${currentIdx/queue.length*100}%`;
@@ -343,8 +402,11 @@ function loadQuestion(){
   document.getElementById('btn-next').textContent=currentIdx===queue.length-1?'Skatīt rezultātus →':'Tālāk →';
   document.getElementById('replay-btn').style.display='none';
   document.getElementById('timer-label').textContent='0:35';
+  hidePlayerError();
+  currentYTUrl=buildYTUrl(w);
+  document.getElementById('open-yt-btn').style.display='none';
   resetBar(); stopPlayback(); wave(false);
-  if(player&&player.cueVideoById) player.cueVideoById({videoId:w.ytId,startSeconds:w.start});
+  cueCurrent();
 }
 
 function resetBar(){
@@ -355,13 +417,15 @@ function resetBar(){
 function togglePlay(){isPlaying?stopPlayback():startPlayback();}
 
 function startPlayback(){
-  if(!player)return;
+  hidePlayerError();
+  if(!player||!playerReady){showPlayerError('Atskaņotājs vēl ielādējas…');return;}
   isPlaying=true; wave(true);
   const btn=document.getElementById('play-btn');
   btn.classList.add('playing');
   btn.innerHTML='<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
   document.getElementById('player-hint').textContent='Klausies…';
-  player.seekTo(queue[currentIdx].start,true); player.playVideo();
+  const w=queue[currentIdx];
+  player.loadVideoById({videoId:w.ytId,startSeconds:w.start});
 
   const f=document.getElementById('timer-fill');
   f.style.transition='none'; f.style.width='100%';
@@ -398,11 +462,49 @@ function replayAudio(){
   resetBar(); startPlayback();
 }
 
+function cueCurrent(){
+  if(!player||!playerReady) return;
+  const w=queue[currentIdx];
+  if(player.cueVideoById) player.cueVideoById({videoId:w.ytId,startSeconds:w.start});
+}
+
+function buildYTUrl(w){
+  return `https://www.youtube.com/watch?v=${w.ytId}&t=${w.start}s`;
+}
+
+function openOnYT(){
+  if(currentYTUrl) window.open(currentYTUrl,'_blank','noopener');
+}
+
+function showPlayerError(msg){
+  const err=document.getElementById('player-error');
+  if(msg) err.textContent=msg;
+  err.style.display='block';
+  document.getElementById('open-yt-btn').style.display='inline-block';
+}
+
+function hidePlayerError(){
+  const err=document.getElementById('player-error');
+  err.style.display='none';
+  err.textContent='Šo ierakstu nevar atskaņot iebūvēti. Atver YouTube.';
+}
+
+let eraVisible=false;
+function setEraVisible(show){
+  eraVisible=show;
+  const tag=document.getElementById('q-era-tag');
+  tag.classList.toggle('visible',show);
+  const btn=document.getElementById('era-toggle');
+  btn.textContent=show?'Slēpt laikmetu':'Rādīt laikmetu';
+}
+function toggleEra(){ setEraVisible(!eraVisible); }
+
 function wave(on){ document.getElementById('waveform').classList.toggle('active',on); }
 function fmt(s){ return '0:'+String(s).padStart(2,'0'); }
 
 function skipQuestion(){
-  answers.push({work:queue[currentIdx],answer:'',correct:false,skipped:true});
+  stopPlayback();
+  answers.push({work:queue[currentIdx],answer:'',skipped:true});
   advance();
 }
 
@@ -410,25 +512,73 @@ function nextQuestion(){
   const ans=document.getElementById('answer-input').value.trim();
   stopPlayback();
   const w=queue[currentIdx];
-  document.getElementById('grade-correct-text').textContent=w.label;
-  document.getElementById('grade-your-text').textContent=ans?`Tava atbilde: "${ans}"`:'Atbilde netika ierakstīta.';
-  document.getElementById('grade-overlay').style.display='flex';
-  window._pending={work:w,answer:ans};
-}
-
-function gradeAnswer(ok){
-  document.getElementById('grade-overlay').style.display='none';
-  answers.push({...window._pending,correct:ok,skipped:false});
+  answers.push({work:w,answer:ans,skipped:!ans});
   advance();
 }
 
 function advance(){
   currentIdx++;
-  if(currentIdx>=queue.length)showResults(); else loadQuestion();
+  if(currentIdx>=queue.length)showReview(); else loadQuestion();
+}
+
+function showReview(){
+  document.getElementById('quiz-screen').style.display='none';
+  document.getElementById('review-screen').style.display='block';
+  buildReviewList();
+  updateReviewSummary();
+}
+
+function buildReviewList(){
+  const list=document.getElementById('review-list');
+  list.innerHTML='';
+  answers.forEach((a,i)=>{
+    if(typeof a.correct!=='boolean'){
+      a.correct=!!a.answer&&normalizeAnswer(a.answer)===normalizeAnswer(a.work.label);
+    }
+    const rowClass=a.correct?'correct':'wrong';
+    const answerText=a.answer?`Tava atbilde: <span>"${escapeHtml(a.answer)}"</span>`:'Atbilde netika ierakstīta.';
+    list.innerHTML+=`<div class="review-item ${rowClass}" id="review-item-${i}">
+      <div class="review-index">${i+1}</div>
+      <div class="review-answers">
+        <div class="review-correct">${escapeHtml(a.work.label)}</div>
+        <div class="review-your">${answerText}</div>
+      </div>
+      <div class="review-controls">
+        <button class="review-btn ${a.correct?'active':''}" data-grade="yes" onclick="setReviewGrade(${i},true)">✓ Ieskaitīt</button>
+        <button class="review-btn deny ${!a.correct?'active':''}" data-grade="no" onclick="setReviewGrade(${i},false)">✗ Neieskaitīt</button>
+      </div>
+    </div>`;
+  });
+}
+
+function setReviewGrade(idx,ok){
+  const a=answers[idx];
+  a.correct=ok;
+  const row=document.getElementById(`review-item-${idx}`);
+  if(row){
+    row.classList.toggle('correct',ok);
+    row.classList.toggle('wrong',!ok);
+    const yes=row.querySelector('[data-grade="yes"]');
+    const no=row.querySelector('[data-grade="no"]');
+    if(yes)yes.classList.toggle('active',ok);
+    if(no)no.classList.toggle('active',!ok);
+  }
+  updateReviewSummary();
+}
+
+function updateReviewSummary(){
+  const ok=answers.filter(a=>a.correct).length;
+  document.getElementById('review-score').textContent=`${ok}/${answers.length}`;
+}
+
+function finishReview(){
+  document.getElementById('review-screen').style.display='none';
+  showResults();
+  const history=saveSession();
+  renderStats(history);
 }
 
 function showResults(){
-  document.getElementById('quiz-screen').style.display='none';
   document.getElementById('results-screen').style.display='block';
   const ok=answers.filter(a=>a.correct).length,tot=answers.length;
   document.getElementById('score-display').textContent=`${ok}/${tot}`;
@@ -436,18 +586,96 @@ function showResults(){
   const list=document.getElementById('results-list');
   list.innerHTML='';
   answers.forEach(a=>{
-    const cls=a.skipped?'skipped':a.correct?'correct':'wrong';
-    const icon=a.skipped?'—':a.correct?'✓':'✗';
+    const cls=a.correct?'correct':(a.skipped?'skipped':'wrong');
+    const icon=a.correct?'✓':(a.skipped?'—':'✗');
+    const your=a.answer?`<div class="result-your-answer">Tava atbilde: <span>"${escapeHtml(a.answer)}"</span></div>`:'<div class="result-your-answer">Atbilde netika ierakstīta</div>';
     list.innerHTML+=`<div class="result-item ${cls}"><div class="result-icon">${icon}</div><div>
-      <div class="result-correct-answer">${a.work.label}</div>
-      ${!a.correct&&!a.skipped?`<div class="result-your-answer">Tava atbilde: <span>"${a.answer||'(tukšs)'}"</span></div>`:''}
-      ${a.skipped?'<div class="result-your-answer">Izlaists</div>':''}
+      <div class="result-correct-answer">${escapeHtml(a.work.label)}</div>
+      ${a.correct?'':your}
     </div></div>`;
   });
 }
 
+function loadHistory(){
+  try{ return JSON.parse(localStorage.getItem('ml-history')||'[]'); }catch(e){ return []; }
+}
+
+function saveSession(){
+  const history=loadHistory();
+  const ok=answers.filter(a=>a.correct).length,tot=answers.length;
+  history.push({
+    ts:Date.now(),
+    ok,tot,
+    items:answers.map(a=>({label:a.work.label,correct:!!a.correct}))
+  });
+  try{ localStorage.setItem('ml-history',JSON.stringify(history)); }catch(e){}
+  return history;
+}
+
+function renderStats(history){
+  const sessionsEl=document.getElementById('stats-sessions');
+  const weakEl=document.getElementById('stats-weak');
+  sessionsEl.innerHTML='';
+  weakEl.innerHTML='';
+  if(!history.length){
+    sessionsEl.innerHTML='<div class="stats-line">Nav saglabātu sesiju.</div>';
+    weakEl.innerHTML='<div class="stats-line">Nav datu.</div>';
+    return;
+  }
+  const start=Math.max(0,history.length-5);
+  for(let i=history.length-1;i>=start;i--){
+    const s=history[i];
+    const prev=history[i-1];
+    const pct=Math.round(s.ok/s.tot*100);
+    const prevPct=prev?Math.round(prev.ok/prev.tot*100):null;
+    const delta=prevPct===null?'' : (pct-prevPct>0?`↑ ${pct-prevPct}%`:(pct-prevPct<0?`↓ ${Math.abs(pct-prevPct)}%`:'· 0%'));
+    sessionsEl.innerHTML+=`<div class="stats-line">${fmtDate(s.ts)} · ${s.ok}/${s.tot} (${pct}%) <span>${delta}</span></div>`;
+  }
+  const agg={};
+  history.forEach(s=>{
+    s.items.forEach(it=>{
+      if(!agg[it.label])agg[it.label]={seen:0,wrong:0};
+      agg[it.label].seen++;
+      if(!it.correct)agg[it.label].wrong++;
+    });
+  });
+  const ranked=Object.entries(agg).sort((a,b)=>{
+    const ra=a[1].wrong/a[1].seen, rb=b[1].wrong/b[1].seen;
+    if(rb!==ra)return rb-ra;
+    return b[1].wrong-a[1].wrong;
+  }).slice(0,5);
+  if(!ranked.length){
+    weakEl.innerHTML='<div class="stats-line">Nav datu.</div>';
+  }else{
+    ranked.forEach(([label,st])=>{
+      const pct=Math.round(st.wrong/st.seen*100);
+      weakEl.innerHTML+=`<div class="stats-line">${escapeHtml(label)} <span>${pct}% (${st.wrong}/${st.seen})</span></div>`;
+    });
+  }
+}
+
+function fmtDate(ts){
+  try{
+    return new Date(ts).toLocaleString('lv-LV',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+  }catch(e){ return new Date(ts).toISOString().slice(0,16).replace('T',' '); }
+}
+
+function normalizeAnswer(s){
+  return s.toLowerCase()
+    .replace(/[.,;:!?()"'“”„”’`]/g,' ')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g,ch=>({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[ch]));
+}
+
 function restart(){
   document.getElementById('results-screen').style.display='none';
+  document.getElementById('review-screen').style.display='none';
   document.getElementById('setup-screen').style.display='flex';
   stopPlayback();
 }
