@@ -17,6 +17,7 @@
     --muted: #7a6e62;
     --danger: #c47a6a;
     --success: #7eb8a4;
+    --partial: #c8a96e;
     --radius: 4px;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -35,6 +36,8 @@
   header { text-align: center; margin-bottom: 48px; }
   .logo-line { font-size: 11px; letter-spacing: 4px; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
   h1 { font-family: 'Playfair Display', serif; font-size: clamp(28px,5vw,44px); font-weight: 400; line-height: 1.2; margin-bottom: 8px; }
+  .home-title { cursor: pointer; }
+  .home-title:hover em { color: #d4b87e; }
   h1 em { font-style: italic; color: var(--accent); }
   .subtitle { font-size: 12px; color: var(--muted); letter-spacing: 1px; }
 
@@ -53,6 +56,10 @@
   .all-eras-btn { grid-column: 1 / -1; text-align: center; }
   .start-btn { width: 100%; background: var(--accent); color: var(--bg); border: none; padding: 16px; font-family: 'Playfair Display', serif; font-size: 18px; font-style: italic; cursor: pointer; border-radius: var(--radius); transition: all 0.2s; }
   .start-btn:hover { background: #d4b87e; transform: translateY(-1px); }
+  .secondary-btn { width: 100%; background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 12px; font-family: 'DM Mono', monospace; font-size: 12px; cursor: pointer; border-radius: var(--radius); transition: all 0.15s; }
+  .secondary-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .secondary-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .card-btn { margin-top: 12px; }
 
   /* Quiz */
   #quiz-screen { display: none; }
@@ -111,6 +118,7 @@
   .results-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 32px; }
   .result-item { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; display: grid; grid-template-columns: 24px 1fr; gap: 12px; align-items: start; }
   .result-item.correct { border-left: 3px solid var(--success); }
+  .result-item.partial { border-left: 3px solid var(--partial); }
   .result-item.wrong   { border-left: 3px solid var(--danger); }
   .result-item.skipped { border-left: 3px solid var(--muted); }
   .result-icon { font-size: 14px; margin-top: 1px; }
@@ -126,6 +134,7 @@
   .review-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
   .review-item { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; display: grid; grid-template-columns: 28px 1fr 170px; gap: 12px; align-items: center; }
   .review-item.correct { border-left: 3px solid var(--success); }
+  .review-item.partial { border-left: 3px solid var(--partial); }
   .review-item.wrong { border-left: 3px solid var(--danger); }
   .review-index { font-size: 11px; color: var(--muted); }
   .review-answers { display: flex; flex-direction: column; gap: 6px; }
@@ -135,17 +144,30 @@
   .review-controls { display: flex; gap: 6px; justify-content: flex-end; }
   .review-btn { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 8px 10px; font-family: 'DM Mono', monospace; font-size: 11px; cursor: pointer; border-radius: var(--radius); transition: all 0.15s; white-space: nowrap; }
   .review-btn.active { background: var(--accent2); color: var(--bg); border-color: var(--accent2); }
+  .review-btn.partial.active { background: var(--partial); color: var(--bg); border-color: var(--partial); }
   .review-btn.deny.active { background: var(--danger); border-color: var(--danger); }
 
   /* Stats */
   .stats-block { margin-top: 36px; }
   .stats-title { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
   .stats-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+  .stats-grid.three { grid-template-columns: 1fr; }
   .stats-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
   .stats-label { font-size: 11px; color: var(--muted); margin-bottom: 10px; }
   .stats-list { display: flex; flex-direction: column; gap: 8px; }
   .stats-line { font-size: 12px; color: var(--text); display: flex; justify-content: space-between; gap: 10px; }
   .stats-line span { color: var(--muted); }
+  .yt-progress { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; margin: 10px 0 6px; }
+  .yt-progress-fill { height: 100%; width: 0%; background: var(--accent2); transition: width 0.2s; }
+  .yt-progress-fill.indeterminate { width: 40%; animation: ytprog 1s ease-in-out infinite; }
+  .yt-progress-label { font-size: 11px; color: var(--muted); text-align: right; }
+  @keyframes ytprog { 0%{transform: translateX(-60%);} 50%{transform: translateX(60%);} 100%{transform: translateX(-60%);} }
+
+  /* Stats screen */
+  #stats-screen { display: none; }
+  .stats-header { text-align: center; margin-bottom: 28px; }
+  .stats-title-lg { font-family: 'Playfair Display', serif; font-size: clamp(26px,4vw,36px); margin-bottom: 6px; }
+  .stats-sub { font-size: 12px; color: var(--muted); letter-spacing: 1px; }
   @media (max-width: 540px){
     .review-item { grid-template-columns: 1fr; }
     .review-controls { justify-content: flex-start; flex-wrap: wrap; }
@@ -153,6 +175,9 @@
   @media (min-width: 640px){
     .review-item { grid-template-columns: 28px 1fr 220px; }
     .stats-grid { grid-template-columns: 1fr 1fr; }
+  }
+  @media (min-width: 980px){
+    .stats-grid.three { grid-template-columns: 1fr 1fr 1fr; }
   }
 
   /* Hidden YT player — audio plays, nothing visible */
@@ -163,7 +188,7 @@
 <div class="container">
   <header>
     <div class="logo-line">Mūzikas literatūra · 2025/2026</div>
-    <h1>Klausies un <em>atpazīsti</em></h1>
+    <h1 id="home-title" class="home-title" role="button" tabindex="0" aria-label="Atpakaļ uz sākumu">Klausies un <em>atpazīsti</em></h1>
     <div class="subtitle">Eksāmena treniņš · 50 skaņdarbi</div>
   </header>
 
@@ -195,6 +220,38 @@
       </div>
     </div>
     <button class="start-btn" id="start-btn">Sākt treniņu →</button>
+    <button class="secondary-btn" id="stats-btn" onclick="openStats()">Statistika</button>
+  </div>
+
+  <!-- STATS -->
+  <div id="stats-screen">
+    <div class="stats-header">
+      <div class="stats-title-lg">Statistika</div>
+      <div class="stats-sub">Iepriekšējie treniņi un tēmu precizitāte</div>
+    </div>
+    <div class="stats-grid three">
+      <div class="stats-card">
+        <div class="stats-label">Sesijas (pēc rezultāta)</div>
+        <div class="stats-list" id="stats-sessions-main"></div>
+      </div>
+      <div class="stats-card">
+        <div class="stats-label">Vājākās tēmas</div>
+        <div class="stats-list" id="stats-weak-main"></div>
+      </div>
+      <div class="stats-card">
+        <div class="stats-label">Labākās tēmas</div>
+        <div class="stats-list" id="stats-best-main"></div>
+      </div>
+    </div>
+    <div class="stats-card" style="margin-top:12px;">
+      <div class="stats-label">YouTube pārbaude (iegultais atskaņotājs)</div>
+      <div class="stats-list" id="yt-check-info">Spied “Pārbaudīt”, lai atrastu video, kas neatskaņojas iebūvēti.</div>
+      <div class="yt-progress"><div class="yt-progress-fill" id="yt-check-fill"></div></div>
+      <div class="yt-progress-label" id="yt-check-label">0/50</div>
+      <button class="secondary-btn card-btn" id="yt-check-btn" onclick="runYTCheck()">Pārbaudīt atskaņošanu</button>
+      <div class="stats-list" id="yt-check-fail"></div>
+    </div>
+    <button class="restart-btn" onclick="goHome()">← Atpakaļ uz sākumu</button>
   </div>
 
   <!-- QUIZ -->
@@ -257,22 +314,23 @@
   <div id="results-screen">
     <div class="results-header">
       <div class="score-display" id="score-display">—</div>
-      <div class="score-sub" id="score-sub">PAREIZAS ATBILDES</div>
+      <div class="score-sub" id="score-sub">IESKAITĪTS</div>
     </div>
     <div class="results-list" id="results-list"></div>
     <div class="stats-block">
       <div class="stats-title">Statistika</div>
       <div class="stats-grid">
-        <div class="stats-card">
-          <div class="stats-label">Pēdējās sesijas</div>
-          <div class="stats-list" id="stats-sessions"></div>
-        </div>
+      <div class="stats-card">
+        <div class="stats-label">Sesijas (pēc rezultāta)</div>
+        <div class="stats-list" id="stats-sessions"></div>
+      </div>
         <div class="stats-card">
           <div class="stats-label">Vājākās tēmas</div>
           <div class="stats-list" id="stats-weak"></div>
         </div>
       </div>
     </div>
+    <button class="secondary-btn" onclick="openStats()">Statistika</button>
     <button class="restart-btn" onclick="restart()">← Jauns treniņš</button>
   </div>
 </div>
@@ -336,10 +394,12 @@ const WORKS = [
 
 let queue=[],currentIdx=0,answers=[];
 let selectedCount=15,selectedEra='all';
-let player=null,isPlaying=false,playerReady=false;
+let player=null,isPlaying=false,playerReady=false,ytLoadTimer=null;
 let currentYTUrl='';
-let timerTimeout=null,countdownInterval=null;
+let progressInterval=null,currentStart=0,playAttemptTimeout=null;
+let playHealthInterval=null,lastPlayTime=0,stallCount=0,retryAttempted=false;
 const PLAY_SEC=35;
+let ytCheckMode=false,ytCheckQueue=[],ytCheckResults=null,ytCheckCurrent=null,ytCheckTimeout=null,ytCheckPending=false;
 
 document.querySelectorAll('.count-btn').forEach(b=>b.addEventListener('click',()=>{
   document.querySelectorAll('.count-btn').forEach(x=>x.classList.remove('active'));
@@ -350,6 +410,26 @@ document.querySelectorAll('.era-btn').forEach(b=>b.addEventListener('click',()=>
   b.classList.add('active'); selectedEra=b.dataset.era;
 }));
 document.getElementById('start-btn').addEventListener('click',startQuiz);
+const homeTitle=document.getElementById('home-title');
+if(homeTitle){
+  homeTitle.addEventListener('click',goHome);
+  homeTitle.addEventListener('keydown',e=>{
+    if(e.key==='Enter'||e.key===' '){e.preventDefault(); goHome();}
+  });
+}
+const answerInput=document.getElementById('answer-input');
+if(answerInput){
+  answerInput.addEventListener('keydown',e=>{
+    if(e.isComposing) return;
+    if(e.key==='Enter' && !e.shiftKey){
+      const quizVisible=document.getElementById('quiz-screen').style.display!=='none';
+      if(quizVisible){
+        e.preventDefault();
+        nextQuestion();
+      }
+    }
+  });
+}
 
 function startQuiz(){
   let pool=selectedEra==='all'?[...WORKS]:WORKS.filter(w=>w.era==selectedEra);
@@ -358,6 +438,7 @@ function startQuiz(){
   queue=pool.slice(0,Math.min(selectedCount,pool.length));
   currentIdx=0;answers=[];
   document.getElementById('setup-screen').style.display='none';
+  document.getElementById('stats-screen').style.display='none';
   document.getElementById('review-screen').style.display='none';
   document.getElementById('results-screen').style.display='none';
   document.getElementById('quiz-screen').style.display='block';
@@ -369,12 +450,31 @@ function loadYT(){
   if(window.YT&&window.YT.Player){initPlayer();return;}
   const s=document.createElement('script');
   s.src='https://www.youtube.com/iframe_api';
+  s.onerror=()=>{
+    showPlayerError('YouTube skripts neielādējās. Atver YouTube.');
+    setYTCheckInfo('YouTube skripts neielādējās. Iespējams bloķēts pārlūkā.');
+    updateYTProgress(0,true);
+  };
   document.head.appendChild(s);
+  clearTimeout(ytLoadTimer);
+  ytLoadTimer=setTimeout(()=>{
+    if(!playerReady){
+      showPlayerError('YouTube atskaņotājs neielādējās. Atver YouTube.');
+      setYTCheckInfo('YouTube atskaņotājs neielādējās. Atver lapu caur http://localhost.');
+      updateYTProgress(0,true);
+    }
+  },5000);
 }
 window.onYouTubeIframeAPIReady=function(){initPlayer();};
 
 function initPlayer(){
-  const w=queue[0];
+  const w=(queue&&queue.length)?queue[0]:WORKS[0];
+  if(!w){
+    showPlayerError('Nav skaņdarbu, ko ielādēt.');
+    setYTCheckInfo('Nav skaņdarbu, ko ielādēt.');
+    updateYTProgress(0,true);
+    return;
+  }
   const origin=(location.protocol==='http:'||location.protocol==='https:')?location.origin:undefined;
   const playerVars={autoplay:0,controls:0,start:w.start,playsinline:1};
   if(origin) playerVars.origin=origin;
@@ -383,11 +483,33 @@ function initPlayer(){
     videoId:w.ytId,
     playerVars,
     events:{
-      onReady:()=>{playerReady=true; cueCurrent();},
-      onStateChange:e=>{if(e.data===YT.PlayerState.ENDED)stopPlayback();},
-      onError:()=>{showPlayerError('Šo ierakstu nevar atskaņot iebūvēti. Atver YouTube.');}
+      onReady:()=>{playerReady=true; cueCurrent(); if(ytCheckPending){ytCheckPending=false; startYTCheck();}},
+      onStateChange:handlePlayerState,
+      onError:handlePlayerError
     }
   });
+}
+
+function handlePlayerState(e){
+  if(ytCheckMode){ handleCheckState(e); return; }
+  if(e.data===YT.PlayerState.PLAYING){
+    isPlaying=true;
+    clearTimeout(playAttemptTimeout);
+    ensureAudible();
+    startHealthCheck();
+    startTicker();
+  }
+  if(e.data===YT.PlayerState.BUFFERING){
+    document.getElementById('player-hint').textContent='Buferē…';
+  }
+  if(e.data===YT.PlayerState.PAUSED){ isPlaying=false; stopTicker(); stopHealthCheck(); }
+  if(e.data===YT.PlayerState.ENDED){ stopPlayback(); showEndHint(); }
+}
+
+function handlePlayerError(e){
+  if(ytCheckMode){ handleCheckError(e); return; }
+  clearTimeout(playAttemptTimeout);
+  showPlayerError('Šo ierakstu nevar atskaņot iebūvēti. Atver YouTube.');
 }
 
 function loadQuestion(){
@@ -405,6 +527,7 @@ function loadQuestion(){
   hidePlayerError();
   currentYTUrl=buildYTUrl(w);
   document.getElementById('open-yt-btn').style.display='none';
+  currentStart=w.start;
   resetBar(); stopPlayback(); wave(false);
   cueCurrent();
 }
@@ -419,37 +542,29 @@ function togglePlay(){isPlaying?stopPlayback():startPlayback();}
 function startPlayback(){
   hidePlayerError();
   if(!player||!playerReady){showPlayerError('Atskaņotājs vēl ielādējas…');return;}
-  isPlaying=true; wave(true);
+  wave(true);
   const btn=document.getElementById('play-btn');
   btn.classList.add('playing');
   btn.innerHTML='<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
   document.getElementById('player-hint').textContent='Klausies…';
   const w=queue[currentIdx];
+  if(player&&player.unMute) player.unMute();
+  if(player&&player.setVolume) player.setVolume(100);
+  retryAttempted=false;
   player.loadVideoById({videoId:w.ytId,startSeconds:w.start});
-
-  const f=document.getElementById('timer-fill');
-  f.style.transition='none'; f.style.width='100%';
-  setTimeout(()=>{ f.style.transition=`width ${PLAY_SEC}s linear`; f.style.width='0%'; },80);
-
-  let rem=PLAY_SEC;
-  document.getElementById('timer-label').textContent=fmt(rem);
-  clearInterval(countdownInterval);
-  countdownInterval=setInterval(()=>{
-    rem--; document.getElementById('timer-label').textContent=fmt(Math.max(rem,0));
-    if(rem<=0)clearInterval(countdownInterval);
-  },1000);
-
-  clearTimeout(timerTimeout);
-  timerTimeout=setTimeout(()=>{
-    stopPlayback();
-    document.getElementById('player-hint').textContent='35 sek. beidzās — pieraksti atbildi!';
-    document.getElementById('replay-btn').style.display='inline-block';
-  },PLAY_SEC*1000);
+  clearTimeout(playAttemptTimeout);
+  playAttemptTimeout=setTimeout(()=>{
+    if(!isPlaying){
+      showPlayerError('Neizdevās iedarbināt atskaņošanu. Atver YouTube vai pārlādē lapu.');
+    }
+  },2000);
 }
 
 function stopPlayback(){
   isPlaying=false;
-  clearTimeout(timerTimeout); clearInterval(countdownInterval);
+  clearTimeout(playAttemptTimeout);
+  stopTicker();
+  stopHealthCheck();
   if(player&&player.pauseVideo)player.pauseVideo();
   wave(false);
   const btn=document.getElementById('play-btn');
@@ -460,6 +575,77 @@ function stopPlayback(){
 function replayAudio(){
   document.getElementById('replay-btn').style.display='none';
   resetBar(); startPlayback();
+}
+
+function startTicker(){
+  stopTicker();
+  progressInterval=setInterval(updateProgress,200);
+  updateProgress();
+}
+
+function stopTicker(){
+  if(progressInterval){clearInterval(progressInterval);progressInterval=null;}
+}
+
+function startHealthCheck(){
+  stopHealthCheck();
+  if(!player||!playerReady) return;
+  lastPlayTime=player.getCurrentTime()||0;
+  stallCount=0;
+  playHealthInterval=setInterval(()=>{
+    if(!player||!playerReady||!isPlaying) return;
+    const state=player.getPlayerState?player.getPlayerState():null;
+    if(state===YT.PlayerState.BUFFERING||state===YT.PlayerState.UNSTARTED) return;
+    const t=player.getCurrentTime()||0;
+    if(t<=lastPlayTime+0.05){
+      stallCount++;
+      if(stallCount>=4){
+        if(player.isMuted && player.isMuted()){
+          player.unMute();
+          if(player.setVolume) player.setVolume(100);
+          showPlayerError('Skaņa bija izslēgta — ieslēdzu. Ja vēl nedzirdi, atver YouTube.');
+          stallCount=0;
+          return;
+        }
+        if(!retryAttempted){
+          retryAttempted=true;
+          if(player.playVideo) player.playVideo();
+          stallCount=0;
+          return;
+        }
+        showPlayerError('Atskaņošana iestrēga. Atver YouTube.');
+        stopPlayback();
+      }
+    }else{
+      lastPlayTime=t;
+      stallCount=0;
+    }
+  },400);
+}
+
+function stopHealthCheck(){
+  if(playHealthInterval){clearInterval(playHealthInterval);playHealthInterval=null;}
+}
+
+function updateProgress(){
+  if(!player||!playerReady) return;
+  const t=player.getCurrentTime();
+  if(!isFinite(t)) return;
+  const elapsed=Math.max(0,t-currentStart);
+  const remaining=Math.max(0,PLAY_SEC-elapsed);
+  document.getElementById('timer-label').textContent=fmt(Math.ceil(remaining));
+  const pct=Math.max(0,Math.min(1,remaining/PLAY_SEC))*100;
+  const f=document.getElementById('timer-fill');
+  f.style.transition='none'; f.style.width=`${pct}%`;
+  if(elapsed>=PLAY_SEC){
+    stopPlayback();
+    showEndHint();
+  }
+}
+
+function showEndHint(){
+  document.getElementById('player-hint').textContent='35 sek. beidzās — pieraksti atbildi!';
+  document.getElementById('replay-btn').style.display='inline-block';
 }
 
 function cueCurrent(){
@@ -476,17 +662,139 @@ function openOnYT(){
   if(currentYTUrl) window.open(currentYTUrl,'_blank','noopener');
 }
 
+function runYTCheck(){
+  if(ytCheckMode) return;
+  if(!playerReady){
+    ytCheckPending=true;
+    loadYT();
+    setYTCheckInfo('Ielādē YouTube atskaņotāju…');
+    updateYTProgress(0,true);
+    return;
+  }
+  startYTCheck();
+}
+
+function startYTCheck(){
+  ytCheckMode=true;
+  ytCheckQueue=[...WORKS];
+  ytCheckResults={ok:[],blocked:[],unknown:[]};
+  if(player&&player.mute) player.mute();
+  updateYTCheckUI();
+  nextYTCheck();
+}
+
+function nextYTCheck(){
+  if(!ytCheckQueue.length){ finishYTCheck(); return; }
+  ytCheckCurrent=ytCheckQueue.shift();
+  updateYTCheckUI();
+  try{
+    player.loadVideoById({videoId:ytCheckCurrent.ytId,startSeconds:ytCheckCurrent.start});
+  }catch(e){
+    ytCheckResults.unknown.push({...ytCheckCurrent,reason:'exception'});
+    return nextYTCheck();
+  }
+  clearTimeout(ytCheckTimeout);
+  ytCheckTimeout=setTimeout(()=>{
+    if(!ytCheckMode) return;
+    ytCheckResults.unknown.push({...ytCheckCurrent,reason:'timeout'});
+    nextYTCheck();
+  },4000);
+}
+
+function handleCheckState(e){
+  if(e.data===YT.PlayerState.PLAYING){
+    clearTimeout(ytCheckTimeout);
+    ytCheckResults.ok.push(ytCheckCurrent);
+    if(player&&player.pauseVideo) player.pauseVideo();
+    nextYTCheck();
+  }
+}
+
+function handleCheckError(e){
+  clearTimeout(ytCheckTimeout);
+  const code=(e&&e.data!==undefined)?e.data:'?';
+  ytCheckResults.blocked.push({...ytCheckCurrent,code});
+  nextYTCheck();
+}
+
+function finishYTCheck(){
+  ytCheckMode=false;
+  if(player&&player.pauseVideo) player.pauseVideo();
+  if(player&&player.unMute) player.unMute();
+  updateYTCheckUI(true);
+}
+
+function setYTCheckInfo(text){
+  const info=document.getElementById('yt-check-info');
+  if(info) info.textContent=text;
+}
+
+function updateYTCheckUI(done=false){
+  const btn=document.getElementById('yt-check-btn');
+  if(btn){
+    btn.disabled=ytCheckMode;
+    btn.textContent=ytCheckMode?'Pārbauda…':'Pārbaudīt atskaņošanu';
+  }
+  const info=document.getElementById('yt-check-info');
+  const failEl=document.getElementById('yt-check-fail');
+  if(!info||!failEl) return;
+  if(!ytCheckResults){
+    info.textContent='Spied “Pārbaudīt”, lai atrastu video, kas neatskaņojas iebūvēti.';
+    failEl.innerHTML='';
+    updateYTProgress(0,false);
+    return;
+  }
+  const doneCount=ytCheckResults.ok.length+ytCheckResults.blocked.length+ytCheckResults.unknown.length;
+  info.textContent=ytCheckMode?`Pārbaude: ${doneCount}/${WORKS.length}`:`Pārbaude pabeigta: ${doneCount}/${WORKS.length}`;
+  updateYTProgress(doneCount/WORKS.length*100,false);
+  if(!done) return;
+  const blocked=ytCheckResults.blocked;
+  const unknown=ytCheckResults.unknown;
+  if(!blocked.length && !unknown.length){
+    failEl.innerHTML='<div class="stats-line">Viss atskaņojas iebūvēti.</div>';
+    return;
+  }
+  let html='';
+  if(blocked.length){
+    html+=`<div class="stats-line">Neatskaņojas embed: ${blocked.length}</div>`;
+    blocked.forEach(it=>{
+      html+=`<div class="stats-line">${escapeHtml(it.label)} <span>kods ${it.code}</span></div>`;
+    });
+  }
+  if(unknown.length){
+    html+=`<div class="stats-line">Nezināms (autoplay bloķēts): ${unknown.length}</div>`;
+    unknown.forEach(it=>{
+      html+=`<div class="stats-line">${escapeHtml(it.label)}</div>`;
+    });
+  }
+  failEl.innerHTML=html;
+}
+
+function updateYTProgress(pct,indeterminate){
+  const fill=document.getElementById('yt-check-fill');
+  const label=document.getElementById('yt-check-label');
+  if(!fill||!label) return;
+  fill.classList.toggle('indeterminate',!!indeterminate);
+  if(!indeterminate){
+    fill.style.width=`${Math.max(0,Math.min(100,pct||0))}%`;
+  }
+  const done=ytCheckResults? (ytCheckResults.ok.length+ytCheckResults.blocked.length+ytCheckResults.unknown.length):0;
+  label.textContent=`${done}/${WORKS.length}`;
+}
+
 function showPlayerError(msg){
   const err=document.getElementById('player-error');
   if(msg) err.textContent=msg;
   err.style.display='block';
   document.getElementById('open-yt-btn').style.display='inline-block';
+  document.getElementById('player-hint').textContent='Nevar atskaņot iebūvēti';
 }
 
 function hidePlayerError(){
   const err=document.getElementById('player-error');
   err.style.display='none';
   err.textContent='Šo ierakstu nevar atskaņot iebūvēti. Atver YouTube.';
+  document.getElementById('player-hint').textContent='Nospied, lai sāktu klausīties';
 }
 
 let eraVisible=false;
@@ -532,10 +840,10 @@ function buildReviewList(){
   const list=document.getElementById('review-list');
   list.innerHTML='';
   answers.forEach((a,i)=>{
-    if(typeof a.correct!=='boolean'){
-      a.correct=!!a.answer&&normalizeAnswer(a.answer)===normalizeAnswer(a.work.label);
+    if(typeof a.score!=='number'){
+      a.score=!!a.answer&&normalizeAnswer(a.answer)===normalizeAnswer(a.work.label)?1:0;
     }
-    const rowClass=a.correct?'correct':'wrong';
+    const rowClass=a.score===1?'correct':a.score===0.5?'partial':'wrong';
     const answerText=a.answer?`Tava atbilde: <span>"${escapeHtml(a.answer)}"</span>`:'Atbilde netika ierakstīta.';
     list.innerHTML+=`<div class="review-item ${rowClass}" id="review-item-${i}">
       <div class="review-index">${i+1}</div>
@@ -544,31 +852,35 @@ function buildReviewList(){
         <div class="review-your">${answerText}</div>
       </div>
       <div class="review-controls">
-        <button class="review-btn ${a.correct?'active':''}" data-grade="yes" onclick="setReviewGrade(${i},true)">✓ Ieskaitīt</button>
-        <button class="review-btn deny ${!a.correct?'active':''}" data-grade="no" onclick="setReviewGrade(${i},false)">✗ Neieskaitīt</button>
+        <button class="review-btn ${a.score===1?'active':''}" data-grade="yes" onclick="setReviewGrade(${i},1)">✓ Ieskaitīt</button>
+        <button class="review-btn partial ${a.score===0.5?'active':''}" data-grade="partial" onclick="setReviewGrade(${i},0.5)">½ Daļēji</button>
+        <button class="review-btn deny ${a.score===0?'active':''}" data-grade="no" onclick="setReviewGrade(${i},0)">✗ Neieskaitīt</button>
       </div>
     </div>`;
   });
 }
 
-function setReviewGrade(idx,ok){
+function setReviewGrade(idx,score){
   const a=answers[idx];
-  a.correct=ok;
+  a.score=score;
   const row=document.getElementById(`review-item-${idx}`);
   if(row){
-    row.classList.toggle('correct',ok);
-    row.classList.toggle('wrong',!ok);
+    row.classList.toggle('correct',score===1);
+    row.classList.toggle('partial',score===0.5);
+    row.classList.toggle('wrong',score===0);
     const yes=row.querySelector('[data-grade="yes"]');
+    const partial=row.querySelector('[data-grade="partial"]');
     const no=row.querySelector('[data-grade="no"]');
-    if(yes)yes.classList.toggle('active',ok);
-    if(no)no.classList.toggle('active',!ok);
+    if(yes)yes.classList.toggle('active',score===1);
+    if(partial)partial.classList.toggle('active',score===0.5);
+    if(no)no.classList.toggle('active',score===0);
   }
   updateReviewSummary();
 }
 
 function updateReviewSummary(){
-  const ok=answers.filter(a=>a.correct).length;
-  document.getElementById('review-score').textContent=`${ok}/${answers.length}`;
+  const points=sumScores();
+  document.getElementById('review-score').textContent=`${fmtScore(points)}/${answers.length}`;
 }
 
 function finishReview(){
@@ -580,18 +892,19 @@ function finishReview(){
 
 function showResults(){
   document.getElementById('results-screen').style.display='block';
-  const ok=answers.filter(a=>a.correct).length,tot=answers.length;
-  document.getElementById('score-display').textContent=`${ok}/${tot}`;
-  document.getElementById('score-sub').textContent=`PAREIZAS ATBILDES · ${Math.round(ok/tot*100)}%`;
+  const points=sumScores(),tot=answers.length;
+  document.getElementById('score-display').textContent=`${fmtScore(points)}/${tot}`;
+  document.getElementById('score-sub').textContent=`IESKAITĪTS · ${Math.round(points/tot*100)}%`;
   const list=document.getElementById('results-list');
   list.innerHTML='';
   answers.forEach(a=>{
-    const cls=a.correct?'correct':(a.skipped?'skipped':'wrong');
-    const icon=a.correct?'✓':(a.skipped?'—':'✗');
+    const score=typeof a.score==='number'?a.score:0;
+    const cls=score===1?'correct':score===0.5?'partial':(a.skipped?'skipped':'wrong');
+    const icon=score===1?'✓':(score===0.5?'½':(a.skipped?'—':'✗'));
     const your=a.answer?`<div class="result-your-answer">Tava atbilde: <span>"${escapeHtml(a.answer)}"</span></div>`:'<div class="result-your-answer">Atbilde netika ierakstīta</div>';
     list.innerHTML+=`<div class="result-item ${cls}"><div class="result-icon">${icon}</div><div>
       <div class="result-correct-answer">${escapeHtml(a.work.label)}</div>
-      ${a.correct?'':your}
+      ${score===1?'':your}
     </div></div>`;
   });
 }
@@ -602,55 +915,82 @@ function loadHistory(){
 
 function saveSession(){
   const history=loadHistory();
-  const ok=answers.filter(a=>a.correct).length,tot=answers.length;
+  const ok=sumScores(),tot=answers.length;
   history.push({
     ts:Date.now(),
     ok,tot,
-    items:answers.map(a=>({label:a.work.label,correct:!!a.correct}))
+    items:answers.map(a=>({label:a.work.label,score:typeof a.score==='number'?a.score:0}))
   });
   try{ localStorage.setItem('ml-history',JSON.stringify(history)); }catch(e){}
   return history;
 }
 
-function renderStats(history){
-  const sessionsEl=document.getElementById('stats-sessions');
-  const weakEl=document.getElementById('stats-weak');
-  sessionsEl.innerHTML='';
-  weakEl.innerHTML='';
+function renderStats(history, opts={}){
+  const sessionsEl=document.getElementById(opts.sessionsId||'stats-sessions');
+  const weakEl=document.getElementById(opts.weakId||'stats-weak');
+  const bestEl=opts.bestId?document.getElementById(opts.bestId):null;
+  if(sessionsEl) sessionsEl.innerHTML='';
+  if(weakEl) weakEl.innerHTML='';
+  if(bestEl) bestEl.innerHTML='';
   if(!history.length){
-    sessionsEl.innerHTML='<div class="stats-line">Nav saglabātu sesiju.</div>';
-    weakEl.innerHTML='<div class="stats-line">Nav datu.</div>';
+    if(sessionsEl) sessionsEl.innerHTML='<div class="stats-line">Nav saglabātu sesiju.</div>';
+    if(weakEl) weakEl.innerHTML='<div class="stats-line">Nav datu.</div>';
+    if(bestEl) bestEl.innerHTML='<div class="stats-line">Nav datu.</div>';
     return;
   }
-  const start=Math.max(0,history.length-5);
-  for(let i=history.length-1;i>=start;i--){
-    const s=history[i];
-    const prev=history[i-1];
-    const pct=Math.round(s.ok/s.tot*100);
-    const prevPct=prev?Math.round(prev.ok/prev.tot*100):null;
-    const delta=prevPct===null?'' : (pct-prevPct>0?`↑ ${pct-prevPct}%`:(pct-prevPct<0?`↓ ${Math.abs(pct-prevPct)}%`:'· 0%'));
-    sessionsEl.innerHTML+=`<div class="stats-line">${fmtDate(s.ts)} · ${s.ok}/${s.tot} (${pct}%) <span>${delta}</span></div>`;
+  if(sessionsEl){
+    const sessions=history.map(s=>{
+      const pct=Math.round(s.ok/s.tot*100);
+      return {...s,pct};
+    }).sort((a,b)=>{
+      if(b.pct!==a.pct) return b.pct-a.pct;
+      if(b.ok!==a.ok) return b.ok-a.ok;
+      return b.ts-a.ts;
+    });
+    sessions.forEach(s=>{
+      sessionsEl.innerHTML+=`<div class="stats-line">${fmtDate(s.ts)} · ${fmtScore(s.ok)}/${s.tot} (${s.pct}%)</div>`;
+    });
   }
   const agg={};
   history.forEach(s=>{
     s.items.forEach(it=>{
-      if(!agg[it.label])agg[it.label]={seen:0,wrong:0};
+      if(!agg[it.label])agg[it.label]={seen:0,sum:0};
       agg[it.label].seen++;
-      if(!it.correct)agg[it.label].wrong++;
+      const score=typeof it.score==='number'?it.score:(it.correct?1:0);
+      agg[it.label].sum+=score;
     });
   });
-  const ranked=Object.entries(agg).sort((a,b)=>{
-    const ra=a[1].wrong/a[1].seen, rb=b[1].wrong/b[1].seen;
-    if(rb!==ra)return rb-ra;
-    return b[1].wrong-a[1].wrong;
+  const items=Object.entries(agg).map(([label,st])=>{
+    const acc=st.seen?st.sum/st.seen:0;
+    return {label,seen:st.seen,sum:st.sum,acc};
+  });
+  const worst=items.slice().sort((a,b)=>{
+    if(a.acc!==b.acc) return a.acc-b.acc;
+    return b.seen-a.seen;
   }).slice(0,5);
-  if(!ranked.length){
-    weakEl.innerHTML='<div class="stats-line">Nav datu.</div>';
-  }else{
-    ranked.forEach(([label,st])=>{
-      const pct=Math.round(st.wrong/st.seen*100);
-      weakEl.innerHTML+=`<div class="stats-line">${escapeHtml(label)} <span>${pct}% (${st.wrong}/${st.seen})</span></div>`;
-    });
+  const best=items.slice().sort((a,b)=>{
+    if(a.acc!==b.acc) return b.acc-a.acc;
+    return b.seen-a.seen;
+  }).slice(0,5);
+  if(weakEl){
+    if(!worst.length){
+      weakEl.innerHTML='<div class="stats-line">Nav datu.</div>';
+    }else{
+      worst.forEach(it=>{
+        const pct=Math.round(it.acc*100);
+        weakEl.innerHTML+=`<div class="stats-line">${escapeHtml(it.label)} <span>${pct}% (${fmtScore(it.sum)}/${it.seen})</span></div>`;
+      });
+    }
+  }
+  if(bestEl){
+    if(!best.length){
+      bestEl.innerHTML='<div class="stats-line">Nav datu.</div>';
+    }else{
+      best.forEach(it=>{
+        const pct=Math.round(it.acc*100);
+        bestEl.innerHTML+=`<div class="stats-line">${escapeHtml(it.label)} <span>${pct}% (${fmtScore(it.sum)}/${it.seen})</span></div>`;
+      });
+    }
   }
 }
 
@@ -658,6 +998,14 @@ function fmtDate(ts){
   try{
     return new Date(ts).toLocaleString('lv-LV',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
   }catch(e){ return new Date(ts).toISOString().slice(0,16).replace('T',' '); }
+}
+
+function fmtScore(n){
+  return Number.isInteger(n)?String(n):String(n.toFixed(1));
+}
+
+function sumScores(){
+  return answers.reduce((sum,a)=>sum+(typeof a.score==='number'?a.score:0),0);
 }
 
 function normalizeAnswer(s){
@@ -673,11 +1021,27 @@ function escapeHtml(s){
   }[ch]));
 }
 
-function restart(){
-  document.getElementById('results-screen').style.display='none';
+function openStats(){
+  document.getElementById('setup-screen').style.display='none';
+  document.getElementById('quiz-screen').style.display='none';
   document.getElementById('review-screen').style.display='none';
+  document.getElementById('results-screen').style.display='none';
+  document.getElementById('stats-screen').style.display='block';
+  renderStats(loadHistory(),{sessionsId:'stats-sessions-main',weakId:'stats-weak-main',bestId:'stats-best-main'});
+  updateYTCheckUI();
+}
+
+function goHome(){
+  document.getElementById('quiz-screen').style.display='none';
+  document.getElementById('review-screen').style.display='none';
+  document.getElementById('results-screen').style.display='none';
+  document.getElementById('stats-screen').style.display='none';
   document.getElementById('setup-screen').style.display='flex';
   stopPlayback();
+}
+
+function restart(){
+  goHome();
 }
 
 function shuffle(a){
