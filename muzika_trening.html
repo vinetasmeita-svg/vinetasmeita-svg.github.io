@@ -99,6 +99,9 @@
   .yt-link { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 6px 12px; font-family: 'DM Mono', monospace; font-size: 11px; cursor: pointer; border-radius: var(--radius); margin-top: 10px; display: none; }
   .yt-link:hover { border-color: var(--accent); color: var(--accent); }
   .player-error { font-size: 11px; color: var(--danger); margin-top: 10px; display: none; }
+  .yt-fallback { font-size: 11px; color: var(--muted); margin-top: 8px; display: none; }
+  .yt-fallback a { color: var(--accent2); text-decoration: none; border-bottom: 1px dotted var(--accent2); }
+  .yt-fallback a:hover { color: var(--accent); border-bottom-color: var(--accent); }
 
   .answer-area { padding: 0 20px 20px; }
   .answer-input { width: 100%; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 14px 16px; font-family: 'DM Mono', monospace; font-size: 14px; border-radius: var(--radius); transition: border-color 0.15s; resize: none; min-height: 80px; }
@@ -288,6 +291,7 @@
         <button class="replay-btn" id="replay-btn" onclick="replayAudio()" style="display:none">↺ Klausīties vēlreiz</button>
         <div class="player-error" id="player-error">Šo ierakstu nevar atskaņot iebūvēti. Atver YouTube.</div>
         <button class="yt-link" id="open-yt-btn" onclick="openOnYT()">Atvērt YouTube</button>
+        <div class="yt-fallback" id="yt-fallback">Popup bloķēts. Atver šeit: <a id="yt-fallback-link" href="#" target="_blank" rel="noopener">YouTube</a></div>
       </div>
       <div class="answer-area">
         <textarea class="answer-input" id="answer-input" placeholder="Pieraksti: autors, skaņdarba nosaukums, daļa/numurs..."></textarea>
@@ -434,8 +438,8 @@ if(answerInput){
 function startQuiz(){
   let pool=selectedEra==='all'?[...WORKS]:WORKS.filter(w=>w.era==selectedEra);
   if(!pool.length){alert("Nav skaņdarbu šajā grupā.");return;}
-  shuffle(pool);
-  queue=pool.slice(0,Math.min(selectedCount,pool.length));
+  const count=Math.min(selectedCount,pool.length);
+  queue=selectQueue(pool,count);
   currentIdx=0;answers=[];
   document.getElementById('setup-screen').style.display='none';
   document.getElementById('stats-screen').style.display='none';
@@ -527,6 +531,7 @@ function loadQuestion(){
   hidePlayerError();
   currentYTUrl=buildYTUrl(w);
   document.getElementById('open-yt-btn').style.display='none';
+  document.getElementById('yt-fallback').style.display='none';
   currentStart=w.start;
   resetBar(); stopPlayback(); wave(false);
   cueCurrent();
@@ -554,6 +559,14 @@ function startPlayback(){
   player.loadVideoById({videoId:w.ytId,startSeconds:w.start});
   clearTimeout(playAttemptTimeout);
   playAttemptTimeout=setTimeout(()=>{
+    const state=player.getPlayerState?player.getPlayerState():null;
+    if(state===YT.PlayerState.PLAYING && !isPlaying){
+      isPlaying=true;
+      ensureAudible();
+      startHealthCheck();
+      startTicker();
+      return;
+    }
     if(!isPlaying){
       showPlayerError('Neizdevās iedarbināt atskaņošanu. Atver YouTube vai pārlādē lapu.');
     }
@@ -659,7 +672,14 @@ function buildYTUrl(w){
 }
 
 function openOnYT(){
-  if(currentYTUrl) window.open(currentYTUrl,'_blank','noopener');
+  if(!currentYTUrl) return;
+  const w=window.open(currentYTUrl,'_blank','noopener');
+  if(!w){
+    const fb=document.getElementById('yt-fallback');
+    const link=document.getElementById('yt-fallback-link');
+    if(link) link.href=currentYTUrl;
+    if(fb) fb.style.display='block';
+  }
 }
 
 function runYTCheck(){
@@ -788,6 +808,16 @@ function showPlayerError(msg){
   err.style.display='block';
   document.getElementById('open-yt-btn').style.display='inline-block';
   document.getElementById('player-hint').textContent='Nevar atskaņot iebūvēti';
+}
+
+function ensureAudible(){
+  if(!player) return;
+  try{
+    if(player.isMuted && player.isMuted()) player.unMute();
+  }catch(e){}
+  try{
+    if(player.getVolume && player.getVolume() < 50) player.setVolume(100);
+  }catch(e){}
 }
 
 function hidePlayerError(){
@@ -1042,6 +1072,49 @@ function goHome(){
 
 function restart(){
   goHome();
+}
+
+function buildHistoryMap(){
+  const history=loadHistory();
+  const map={};
+  history.forEach(s=>{
+    s.items.forEach(it=>{
+      if(!map[it.label]) map[it.label]={seen:0,sum:0};
+      const score=typeof it.score==='number'?it.score:(it.correct?1:0);
+      map[it.label].seen++;
+      map[it.label].sum+=score;
+    });
+  });
+  return map;
+}
+
+function selectQueue(pool,count){
+  const history=loadHistory();
+  if(!history.length){ shuffle(pool); return pool.slice(0,count); }
+  const map=buildHistoryMap();
+  const withStats=[], withoutStats=[];
+  pool.forEach(w=>{
+    const st=map[w.label];
+    if(st && st.seen>0){
+      withStats.push({w,acc:st.sum/st.seen});
+    }else{
+      withoutStats.push(w);
+    }
+  });
+  if(!withStats.length){ shuffle(pool); return pool.slice(0,count); }
+  withStats.sort((a,b)=>a.acc-b.acc); // vājākie pirmie
+  const target=Math.min(count, Math.max(1, Math.round(count*0.75)));
+  let weak=withStats.slice(0, Math.min(withStats.length, target)).map(x=>x.w);
+  if(weak.length<target){
+    shuffle(withoutStats);
+    weak=weak.concat(withoutStats.slice(0, target-weak.length));
+  }
+  shuffle(weak);
+  const picked=weak.slice(0,target);
+  const pickedSet=new Set(picked.map(w=>w.label));
+  const rest=pool.filter(w=>!pickedSet.has(w.label));
+  shuffle(rest);
+  return picked.concat(rest.slice(0, count-picked.length));
 }
 
 function shuffle(a){
