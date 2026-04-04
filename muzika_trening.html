@@ -160,6 +160,7 @@
   .stats-list { display: flex; flex-direction: column; gap: 8px; }
   .stats-line { font-size: 12px; color: var(--text); display: flex; justify-content: space-between; gap: 10px; }
   .stats-line span { color: var(--muted); }
+  .stats-scroll { max-height: 260px; overflow-y: auto; padding-right: 6px; }
   .yt-progress { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; margin: 10px 0 6px; }
   .yt-progress-fill { height: 100%; width: 0%; background: var(--accent2); transition: width 0.2s; }
   .yt-progress-fill.indeterminate { width: 40%; animation: ytprog 1s ease-in-out infinite; }
@@ -171,6 +172,7 @@
   .stats-header { text-align: center; margin-bottom: 28px; }
   .stats-title-lg { font-family: 'Playfair Display', serif; font-size: clamp(26px,4vw,36px); margin-bottom: 6px; }
   .stats-sub { font-size: 12px; color: var(--muted); letter-spacing: 1px; }
+  #yt-check-screen { display: none; }
   @media (max-width: 540px){
     .review-item { grid-template-columns: 1fr; }
     .review-controls { justify-content: flex-start; flex-wrap: wrap; }
@@ -183,7 +185,7 @@
     .stats-grid.three { grid-template-columns: 1fr 1fr 1fr; }
   }
 
-  /* Hidden YT player — audio plays, nothing visible */
+  /* Hidden players — audio plays, nothing visible */
   .yt-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; pointer-events: none; left: -9999px; top: -9999px; }
 </style>
 </head>
@@ -224,6 +226,7 @@
     </div>
     <button class="start-btn" id="start-btn">Sākt treniņu →</button>
     <button class="secondary-btn" id="stats-btn" onclick="openStats()">Statistika</button>
+    <button class="secondary-btn" id="yt-check-home-btn" onclick="openYTCheck()">YouTube pārbaude</button>
   </div>
 
   <!-- STATS -->
@@ -235,7 +238,7 @@
     <div class="stats-grid three">
       <div class="stats-card">
         <div class="stats-label">Sesijas (pēc rezultāta)</div>
-        <div class="stats-list" id="stats-sessions-main"></div>
+        <div class="stats-list stats-scroll" id="stats-sessions-main"></div>
       </div>
       <div class="stats-card">
         <div class="stats-label">Vājākās tēmas</div>
@@ -247,7 +250,20 @@
       </div>
     </div>
     <div class="stats-card" style="margin-top:12px;">
-      <div class="stats-label">YouTube pārbaude (iegultais atskaņotājs)</div>
+      <div class="stats-label">Visas tēmas (no vājākajām uz stiprākajām)</div>
+      <div class="stats-list stats-scroll" id="stats-all-main"></div>
+    </div>
+    <button class="restart-btn" onclick="goHome()">← Atpakaļ uz sākumu</button>
+  </div>
+
+  <!-- YT CHECK -->
+  <div id="yt-check-screen">
+    <div class="stats-header">
+      <div class="stats-title-lg">YouTube pārbaude</div>
+      <div class="stats-sub">Iegultā atskaņotāja darbspēja</div>
+    </div>
+    <div class="stats-card">
+      <div class="stats-label">Pārbaude</div>
       <div class="stats-list" id="yt-check-info">Spied “Pārbaudīt”, lai atrastu video, kas neatskaņojas iebūvēti.</div>
       <div class="yt-progress"><div class="yt-progress-fill" id="yt-check-fill"></div></div>
       <div class="yt-progress-label" id="yt-check-label">0/50</div>
@@ -324,10 +340,10 @@
     <div class="stats-block">
       <div class="stats-title">Statistika</div>
       <div class="stats-grid">
-      <div class="stats-card">
-        <div class="stats-label">Sesijas (pēc rezultāta)</div>
-        <div class="stats-list" id="stats-sessions"></div>
-      </div>
+        <div class="stats-card">
+          <div class="stats-label">Sesijas (pēc rezultāta)</div>
+          <div class="stats-list stats-scroll" id="stats-sessions"></div>
+        </div>
         <div class="stats-card">
           <div class="stats-label">Vājākās tēmas</div>
           <div class="stats-list" id="stats-weak"></div>
@@ -341,59 +357,60 @@
 
 <!-- Hidden YouTube player — audio only, completely invisible -->
 <div class="yt-hidden" aria-hidden="true"><div id="yt-player"></div></div>
+<audio id="local-audio" class="yt-hidden" preload="auto"></audio>
 
 <script>
 const WORKS = [
-  {era:0,eraName:"Baroks",label:"J.S. Bahs — Sv. Mateja pasija: II d. alta ārija (Erbarme Dich)",ytId:"BBeXF_lnj_M",start:0},
-  {era:0,eraName:"Baroks",label:"G.F. Hendelis — oratorija Mesija: III d. soprāna ārija (I know that my Redeemer liveth)",ytId:"qShczRbvO5E",start:40},
-  {era:1,eraName:"Klasicisms",label:"J. Haidns — 103. simfonija (Ar timpānu tremolo): IV d. g.p. (ar mežragu zelta gājienu)",ytId:"lo0k42Uxpe8",start:1488},
-  {era:1,eraName:"Klasicisms",label:"V.A. Mocarts — opera Dons Žuāns: Dž. duetīno ar Cerlīnu I cēl. 3.a. (Sniedz, daiļā, savu roku!)",ytId:"iJnJjpMdT3Y",start:169},
-  {era:1,eraName:"Klasicisms",label:"V.A. Mocarts — 40. simfonija: III d. menueta tēma",ytId:"_JAPx7_ra_A",start:1807},
-  {era:1,eraName:"Klasicisms",label:"L. van Bēthovens — 8. klaviersonāte: I d. g.p.",ytId:"AD1La6aUAng",start:135},
-  {era:1,eraName:"Klasicisms",label:"L. van Bēthovens — 5. simfonija: III d. pamattēma",ytId:"RKcAAA1O2sc",start:1041},
-  {era:2,eraName:"Vācu/austriešu romantisms",label:"F. Šūberts — dz. cikls Skaistā dzirnavniece: Ceļošana (nr. 1)",ytId:"zBAVutlfGOg",start:0},
-  {era:2,eraName:"Vācu/austriešu romantisms",label:"F. Šūberts — dz. cikls Ziemas ceļojums: Leijerkastnieks (nr. 24)",ytId:"sIIS-UgixGE",start:0},
-  {era:2,eraName:"Vācu/austriešu romantisms",label:"R. Šūmanis — klav. cikls Karnevāls: Florestāns",ytId:"IS1JnoM32gk",start:0},
-  {era:2,eraName:"Vācu/austriešu romantisms",label:"R. Vāgners — opera Tannheizers: svētceļnieku vadtēma (Uvertīras 1. tēma)",ytId:"23wJJyfZePI",start:19},
-  {era:2,eraName:"Vācu/austriešu romantisms",label:"R. Vāgners — opera Loengrīns: III cēl. orķ. ievads: pamattēma",ytId:"qy2k_xnE2XQ",start:0},
-  {era:2,eraName:"Vācu/austriešu romantisms",label:"J. Brāmss — 4. simfonija: IV d. (variāciju tēma)",ytId:"WZGWB93-mmI",start:0},
-  {era:2,eraName:"Vācu/austriešu romantisms",label:"G. Mālers — 1. simfonija: III d. vidusposms (groteska, krogus mūzikas epizode)",ytId:"4XbHLFkg_Mw",start:1653},
-  {era:3,eraName:"Franču romantisms",label:"H. Berliozs — Fantastiskā simfonija: V d. Sapnis sabata naktī",ytId:"cao6WyF-61s",start:0},
-  {era:3,eraName:"Franču romantisms",label:"Ž. Bizē — opera Karmena: K. segidilja I cēl.",ytId:"sHjnVz7Ayyw",start:0},
-  {era:4,eraName:"Itāļu romantisms/verisms",label:"Dž. Verdi — opera Traviata: Violetas skats un ārija I cēl.",ytId:"_uzkxQMh05I",start:0},
-  {era:4,eraName:"Itāļu romantisms/verisms",label:"Dž. Verdi — opera Aīda: A. un Radamesa pēdējais duets IV cēl. 2.a. (O terra..., Ges dur)",ytId:"_r9-FBavcgA",start:45},
-  {era:4,eraName:"Itāļu romantisms/verisms",label:"Dž. Pučīni — opera Toska: Kavaradosi monologs III (ārija E lucevan le stelle)",ytId:"5-AF1T4OehM",start:0},
-  {era:5,eraName:"Nacionālais romantisms",label:"F. Šopēns — Polonēze klav. A dur",ytId:"hbnunexhlXM",start:0},
-  {era:5,eraName:"Nacionālais romantisms",label:"F. Lists — simf. poēma Prelīdes: g.p.",ytId:"IC20YIllemg",start:146},
-  {era:5,eraName:"Nacionālais romantisms",label:"A. Dvoržāks — 9. simfonija No Jaunās pasaules: II d. pamattēma",ytId:"h3o5RzHGsp4",start:65},
-  {era:5,eraName:"Nacionālais romantisms",label:"E. Grīgs — Klavierkoncerts: I d. ievads",ytId:"liFdIN2vUr4",start:41},
-  {era:5,eraName:"Nacionālais romantisms",label:"M. Musorgskis — opera Boriss Godunovs: Slavas koris Prol. 2.a. (ar zvaniem ievadā)",ytId:"UEBq-gsdI58",start:111},
-  {era:5,eraName:"Nacionālais romantisms",label:"P. Čaikovskis — 6. simfonija: I d. blakustēma (gaišais sapnis, romantiskais ideāls)",ytId:"C1fs19um8ZU",start:270},
-  {era:5,eraName:"Nacionālais romantisms",label:"P. Čaikovskis — 6. simfonija: IV d. pamattēma (lēnais fināls, samierināšanās ar traģēdiju)",ytId:"C1fs19um8ZU",start:2070},
-  {era:5,eraName:"Nacionālais romantisms",label:"S. Rahmaņinovs — 2. klavierkoncerts: I d. ievads un g.p.",ytId:"u9QLiefnoDE",start:0},
-  {era:5,eraName:"Nacionālais romantisms",label:"Ž. Sibēliuss — Vijolkoncerts: I d. g.p. (Somijas dabas skaistuma rosināta)",ytId:"J0w0t4Qn6LY",start:25},
-  {era:6,eraName:"Ārzemju modernisms",label:"K.A. Debisī — klavierprelūdija Nogrimusī katedrāle: pamattēma (paralēli beztercu akordi)",ytId:"FcnYbpJhpN4",start:1832},
-  {era:6,eraName:"Ārzemju modernisms",label:"M. Ravels — Bolero simfoniskajam orķestrim",ytId:"cmNEvSFWftc",start:0},
-  {era:6,eraName:"Ārzemju modernisms",label:"I. Stravinskis — balets Svētpavasaris: fināls, Lielā svētdeja",ytId:"-AwJVunm42w",start:1736},
-  {era:6,eraName:"Ārzemju modernisms",label:"D. Šostakovičs — 15. simfonija: I d. blakustēma (ar Rosīni citātu)",ytId:"UR7kjPEj1rQ",start:85},
-  {era:6,eraName:"Ārzemju modernisms",label:"V. Ļutoslavskis — Sēru mūzika (Bartoka piemiņai) stīgu orķ.: Prologs (tritoni un pustoņi)",ytId:"4JpqUGoPx2M",start:0},
-  {era:6,eraName:"Ārzemju modernisms",label:"A. Perts — Ādama žēlabas (Adam's Lament) jauktajam korim un st. orķ.",ytId:"zbxGlcsJNmQ",start:0},
-  {era:7,eraName:"Latv. klasika / Vītola skola",label:"Jurjānu Andrejs — simf. svīta Latvju dejas: III d. Nabagu deja: vidusdaļa (Pieci gadi kalpiņš biju)",ytId:"VV0W7QKG_xU",start:58},
-  {era:7,eraName:"Latv. klasika / Vītola skola",label:"J. Vītols — korbalāde Gaismas pils (JVLMA iestādes himna)",ytId:"MkPGcigpmGw",start:0},
-  {era:7,eraName:"Latv. klasika / Vītola skola",label:"J. Vītols — Viļņu dziesma klav.",ytId:"_C99xtWhIlw",start:0},
-  {era:7,eraName:"Latv. klasika / Vītola skola",label:"E. Dārziņš — kordziesma Mēness starus stīgo",ytId:"Nnf2WqLzRsI",start:0},
-  {era:7,eraName:"Latv. klasika / Vītola skola",label:"E. Melngailis — Jāņuvakars korim",ytId:"BLmDFfNOP-A",start:0},
-  {era:7,eraName:"Latv. klasika / Vītola skola",label:"Alfrēds Kalniņš — Balāde klav. (b moll): ievads un g.p. (0:00 un 0:35)",ytId:"nl9MdbuWsxc",start:1},
-  {era:7,eraName:"Latv. klasika / Vītola skola",label:"Alfrēds Kalniņš — opera Baņuta: B. un Vižuta duets III cēl. (Nāc, manu liego ilgu tēls!)",ytId:"kk5DWXl6fW4",start:2174},
-  {era:7,eraName:"Latv. klasika / Vītola skola",label:"Jānis Mediņš — opera Uguns un nakts: Spīdolas ariozo I cēl. (Es esmu es!)",ytId:"6Rlt4zy3Jr0",start:0},
-  {era:8,eraName:"Latv. laikmetīgā mūzika",label:"L. Garūta — kantāte Dievs, Tava zeme deg!: Tēvreize (lūgšana Mūsu Tēvs debesīs)",ytId:"qC_ORAKOiVE",start:57},
-  {era:8,eraName:"Latv. laikmetīgā mūzika",label:"J. Ivanovs — Ceturtā simfonija Atlantīda: II d. pamattēma (ar siev. kori bez vārdiem)",ytId:"TZN83Q11GZg",start:978},
-  {era:8,eraName:"Latv. laikmetīgā mūzika",label:"M. Zariņš — Partita baroka stilā: fināls (6. d.) Pavana (neoklasicisms, džeza elementi)",ytId:"aqyXJ39b6xA",start:575},
-  {era:8,eraName:"Latv. laikmetīgā mūzika",label:"R. Kalsons — Vijolkoncerts: I d. galv. p. (solovijolei tremolo paralēlās tercās lejup)",ytId:"pQk3lQQDT9I",start:12},
-  {era:8,eraName:"Latv. laikmetīgā mūzika",label:"P. Dambis — kora cikls Jūras dziesmas: III d. Zvan' Rīgā, Jelgavā (sonorika, aleatorika)",ytId:"gh2IAH4BJJc",start:212},
-  {era:8,eraName:"Latv. laikmetīgā mūzika",label:"P. Vasks — Musica dolorosa st. orķ. (māsas piemiņai): vidusdaļa (pulsa jēdziens)",ytId:"JYVf4fYCeV0",start:211},
-  {era:8,eraName:"Latv. laikmetīgā mūzika",label:"P. Plakidis — trio Veltījums Haidnam flautai, čellam un klavierēm (Haidna citāti)",ytId:"MT2X2J3L2jE",start:0},
-  {era:8,eraName:"Latv. laikmetīgā mūzika",label:"S. Ratniece — Saline (Sālsezers) jauktajam korim (sonorika, aleatorika, koris elpo, čukst)",ytId:"MG0fCzLz9m4",start:0},
+  {era:0,eraName:"Baroks",label:"J.S. Bahs — Sv. Mateja pasija: II d. alta ārija (Erbarme Dich)",ytId:"BBeXF_lnj_M",start:0,audioSrc:"audio/BBeXF_lnj_M.mp3"},
+  {era:0,eraName:"Baroks",label:"G.F. Hendelis — oratorija Mesija: III d. soprāna ārija (I know that my Redeemer liveth)",ytId:"qShczRbvO5E",start:40,audioSrc:"audio/qShczRbvO5E.mp3"},
+  {era:1,eraName:"Klasicisms",label:"J. Haidns — 103. simfonija (Ar timpānu tremolo): IV d. g.p. (ar mežragu zelta gājienu)",ytId:"lo0k42Uxpe8",start:1488,audioSrc:"audio/lo0k42Uxpe8.mp3"},
+  {era:1,eraName:"Klasicisms",label:"V.A. Mocarts — opera Dons Žuāns: Dž. duetīno ar Cerlīnu I cēl. 3.a. (Sniedz, daiļā, savu roku!)",ytId:"iJnJjpMdT3Y",start:169,audioSrc:"audio/iJnJjpMdT3Y.mp3"},
+  {era:1,eraName:"Klasicisms",label:"V.A. Mocarts — 40. simfonija: III d. menueta tēma",ytId:"_JAPx7_ra_A",start:1807,audioSrc:"audio/_JAPx7_ra_A.mp3"},
+  {era:1,eraName:"Klasicisms",label:"L. van Bēthovens — 8. klaviersonāte: I d. g.p.",ytId:"AD1La6aUAng",start:135,audioSrc:"audio/beethoven_sonata_8_pathetique.mp3"},
+  {era:1,eraName:"Klasicisms",label:"L. van Bēthovens — 5. simfonija: III d. pamattēma",ytId:"RKcAAA1O2sc",start:1041,audioSrc:"audio/RKcAAA1O2sc.mp3"},
+  {era:2,eraName:"Vācu/austriešu romantisms",label:"F. Šūberts — dz. cikls Skaistā dzirnavniece: Ceļošana (nr. 1)",ytId:"zBAVutlfGOg",start:0,audioSrc:"audio/zBAVutlfGOg.mp3"},
+  {era:2,eraName:"Vācu/austriešu romantisms",label:"F. Šūberts — dz. cikls Ziemas ceļojums: Leijerkastnieks (nr. 24)",ytId:"sIIS-UgixGE",start:0,audioSrc:"audio/sIIS-UgixGE.mp3"},
+  {era:2,eraName:"Vācu/austriešu romantisms",label:"R. Šūmanis — klav. cikls Karnevāls: Florestāns",ytId:"IS1JnoM32gk",start:0,audioSrc:"audio/IS1JnoM32gk.mp3"},
+  {era:2,eraName:"Vācu/austriešu romantisms",label:"R. Vāgners — opera Tannheizers: svētceļnieku vadtēma (Uvertīras 1. tēma)",ytId:"23wJJyfZePI",start:19,audioSrc:"audio/23wJJyfZePI.mp3"},
+  {era:2,eraName:"Vācu/austriešu romantisms",label:"R. Vāgners — opera Loengrīns: III cēl. orķ. ievads: pamattēma",ytId:"qy2k_xnE2XQ",start:0,audioSrc:"audio/qy2k_xnE2XQ.mp3"},
+  {era:2,eraName:"Vācu/austriešu romantisms",label:"J. Brāmss — 4. simfonija: IV d. (variāciju tēma)",ytId:"WZGWB93-mmI",start:0,audioSrc:"audio/WZGWB93-mmI.mp3"},
+  {era:2,eraName:"Vācu/austriešu romantisms",label:"G. Mālers — 1. simfonija: III d. vidusposms (groteska, krogus mūzikas epizode)",ytId:"4XbHLFkg_Mw",start:1653,audioSrc:"audio/4XbHLFkg_Mw.mp3"},
+  {era:3,eraName:"Franču romantisms",label:"H. Berliozs — Fantastiskā simfonija: V d. Sapnis sabata naktī",ytId:"cao6WyF-61s",start:0,audioSrc:"audio/cao6WyF-61s.mp3"},
+  {era:3,eraName:"Franču romantisms",label:"Ž. Bizē — opera Karmena: K. segidilja I cēl.",ytId:"sHjnVz7Ayyw",start:0,audioSrc:"audio/sHjnVz7Ayyw.mp3"},
+  {era:4,eraName:"Itāļu romantisms/verisms",label:"Dž. Verdi — opera Traviata: Violetas skats un ārija I cēl.",ytId:"_uzkxQMh05I",start:0,audioSrc:"audio/_uzkxQMh05I.mp3"},
+  {era:4,eraName:"Itāļu romantisms/verisms",label:"Dž. Verdi — opera Aīda: A. un Radamesa pēdējais duets IV cēl. 2.a. (O terra..., Ges dur)",ytId:"_r9-FBavcgA",start:45,audioSrc:"audio/_r9-FBavcgA.mp3"},
+  {era:4,eraName:"Itāļu romantisms/verisms",label:"Dž. Pučīni — opera Toska: Kavaradosi monologs III (ārija E lucevan le stelle)",ytId:"5-AF1T4OehM",start:0,audioSrc:"audio/5-AF1T4OehM.mp3"},
+  {era:5,eraName:"Nacionālais romantisms",label:"F. Šopēns — Polonēze klav. A dur",ytId:"hbnunexhlXM",start:0,audioSrc:"audio/hbnunexhlXM.mp3"},
+  {era:5,eraName:"Nacionālais romantisms",label:"F. Lists — simf. poēma Prelīdes: g.p.",ytId:"IC20YIllemg",start:146,audioSrc:"audio/IC20YIllemg.mp3"},
+  {era:5,eraName:"Nacionālais romantisms",label:"A. Dvoržāks — 9. simfonija No Jaunās pasaules: II d. pamattēma",ytId:"h3o5RzHGsp4",start:65,audioSrc:"audio/h3o5RzHGsp4.mp3"},
+  {era:5,eraName:"Nacionālais romantisms",label:"E. Grīgs — Klavierkoncerts: I d. ievads",ytId:"liFdIN2vUr4",start:41,audioSrc:"audio/liFdIN2vUr4.mp3"},
+  {era:5,eraName:"Nacionālais romantisms",label:"M. Musorgskis — opera Boriss Godunovs: Slavas koris Prol. 2.a. (ar zvaniem ievadā)",ytId:"UEBq-gsdI58",start:111,audioSrc:"audio/UEBq-gsdI58.mp3"},
+  {era:5,eraName:"Nacionālais romantisms",label:"P. Čaikovskis — 6. simfonija: I d. blakustēma (gaišais sapnis, romantiskais ideāls)",ytId:"C1fs19um8ZU",start:270,audioSrc:"audio/C1fs19um8ZU.mp3"},
+  {era:5,eraName:"Nacionālais romantisms",label:"P. Čaikovskis — 6. simfonija: IV d. pamattēma (lēnais fināls, samierināšanās ar traģēdiju)",ytId:"C1fs19um8ZU",start:2070,audioSrc:"audio/C1fs19um8ZU.mp3"},
+  {era:5,eraName:"Nacionālais romantisms",label:"S. Rahmaņinovs — 2. klavierkoncerts: I d. ievads un g.p.",ytId:"u9QLiefnoDE",start:0,audioSrc:"audio/u9QLiefnoDE.mp3"},
+  {era:5,eraName:"Nacionālais romantisms",label:"Ž. Sibēliuss — Vijolkoncerts: I d. g.p. (Somijas dabas skaistuma rosināta)",ytId:"J0w0t4Qn6LY",start:25,audioSrc:"audio/J0w0t4Qn6LY.mp3"},
+  {era:6,eraName:"Ārzemju modernisms",label:"K.A. Debisī — klavierprelūdija Nogrimusī katedrāle: pamattēma (paralēli beztercu akordi)",ytId:"FcnYbpJhpN4",start:1832,audioSrc:"audio/FcnYbpJhpN4.mp3"},
+  {era:6,eraName:"Ārzemju modernisms",label:"M. Ravels — Bolero simfoniskajam orķestrim",ytId:"cmNEvSFWftc",start:0,audioSrc:"audio/cmNEvSFWftc.mp3"},
+  {era:6,eraName:"Ārzemju modernisms",label:"I. Stravinskis — balets Svētpavasaris: fināls, Lielā svētdeja",ytId:"-AwJVunm42w",start:1736,audioSrc:"audio/-AwJVunm42w.mp3"},
+  {era:6,eraName:"Ārzemju modernisms",label:"D. Šostakovičs — 15. simfonija: I d. blakustēma (ar Rosīni citātu)",ytId:"UR7kjPEj1rQ",start:85,audioSrc:"audio/UR7kjPEj1rQ.mp3"},
+  {era:6,eraName:"Ārzemju modernisms",label:"V. Ļutoslavskis — Sēru mūzika (Bartoka piemiņai) stīgu orķ.: Prologs (tritoni un pustoņi)",ytId:"4JpqUGoPx2M",start:0,audioSrc:"audio/4JpqUGoPx2M.mp3"},
+  {era:6,eraName:"Ārzemju modernisms",label:"A. Perts — Ādama žēlabas (Adam's Lament) jauktajam korim un st. orķ.",ytId:"zbxGlcsJNmQ",start:0,audioSrc:"audio/zbxGlcsJNmQ.mp3"},
+  {era:7,eraName:"Latv. klasika / Vītola skola",label:"Jurjānu Andrejs — simf. svīta Latvju dejas: III d. Nabagu deja: vidusdaļa (Pieci gadi kalpiņš biju)",ytId:"VV0W7QKG_xU",start:58,audioSrc:"audio/VV0W7QKG_xU.mp3"},
+  {era:7,eraName:"Latv. klasika / Vītola skola",label:"J. Vītols — korbalāde Gaismas pils (JVLMA iestādes himna)",ytId:"MkPGcigpmGw",start:0,audioSrc:"audio/MkPGcigpmGw.mp3"},
+  {era:7,eraName:"Latv. klasika / Vītola skola",label:"J. Vītols — Viļņu dziesma klav.",ytId:"_C99xtWhIlw",start:0,audioSrc:"audio/_C99xtWhIlw.mp3"},
+  {era:7,eraName:"Latv. klasika / Vītola skola",label:"E. Dārziņš — kordziesma Mēness starus stīgo",ytId:"Nnf2WqLzRsI",start:0,audioSrc:"audio/Nnf2WqLzRsI.mp3"},
+  {era:7,eraName:"Latv. klasika / Vītola skola",label:"E. Melngailis — Jāņuvakars korim",ytId:"BLmDFfNOP-A",start:0,audioSrc:"audio/BLmDFfNOP-A.mp3"},
+  {era:7,eraName:"Latv. klasika / Vītola skola",label:"Alfrēds Kalniņš — Balāde klav. (b moll): ievads un g.p. (0:00 un 0:35)",ytId:"nl9MdbuWsxc",start:1,audioSrc:"audio/nl9MdbuWsxc.mp3"},
+  {era:7,eraName:"Latv. klasika / Vītola skola",label:"Alfrēds Kalniņš — opera Baņuta: B. un Vižuta duets III cēl. (Nāc, manu liego ilgu tēls!)",ytId:"kk5DWXl6fW4",start:2174,audioSrc:"audio/kk5DWXl6fW4.mp3"},
+  {era:7,eraName:"Latv. klasika / Vītola skola",label:"Jānis Mediņš — opera Uguns un nakts: Spīdolas ariozo I cēl. (Es esmu es!)",ytId:"6Rlt4zy3Jr0",start:0,audioSrc:"audio/6Rlt4zy3Jr0.mp3"},
+  {era:8,eraName:"Latv. laikmetīgā mūzika",label:"L. Garūta — kantāte Dievs, Tava zeme deg!: Tēvreize (lūgšana Mūsu Tēvs debesīs)",ytId:"qC_ORAKOiVE",start:57,audioSrc:"audio/qC_ORAKOiVE.mp3"},
+  {era:8,eraName:"Latv. laikmetīgā mūzika",label:"J. Ivanovs — Ceturtā simfonija Atlantīda: II d. pamattēma (ar siev. kori bez vārdiem)",ytId:"TZN83Q11GZg",start:978,audioSrc:"audio/TZN83Q11GZg.mp3"},
+  {era:8,eraName:"Latv. laikmetīgā mūzika",label:"M. Zariņš — Partita baroka stilā: fināls (6. d.) Pavana (neoklasicisms, džeza elementi)",ytId:"aqyXJ39b6xA",start:575,audioSrc:"audio/aqyXJ39b6xA.mp3"},
+  {era:8,eraName:"Latv. laikmetīgā mūzika",label:"R. Kalsons — Vijolkoncerts: I d. galv. p. (solovijolei tremolo paralēlās tercās lejup)",ytId:"pQk3lQQDT9I",start:12,audioSrc:"audio/pQk3lQQDT9I.mp3"},
+  {era:8,eraName:"Latv. laikmetīgā mūzika",label:"P. Dambis — kora cikls Jūras dziesmas: III d. Zvan' Rīgā, Jelgavā (sonorika, aleatorika)",ytId:"gh2IAH4BJJc",start:212,audioSrc:"audio/gh2IAH4BJJc.mp3"},
+  {era:8,eraName:"Latv. laikmetīgā mūzika",label:"P. Vasks — Musica dolorosa st. orķ. (māsas piemiņai): vidusdaļa (pulsa jēdziens)",ytId:"JYVf4fYCeV0",start:211,audioSrc:"audio/JYVf4fYCeV0.mp3"},
+  {era:8,eraName:"Latv. laikmetīgā mūzika",label:"P. Plakidis — trio Veltījums Haidnam flautai, čellam un klavierēm (Haidna citāti)",ytId:"MT2X2J3L2jE",start:0,audioSrc:"audio/MT2X2J3L2jE.mp3"},
+  {era:8,eraName:"Latv. laikmetīgā mūzika",label:"S. Ratniece — Saline (Sālsezers) jauktajam korim (sonorika, aleatorika, koris elpo, čukst)",ytId:"MG0fCzLz9m4",start:0,audioSrc:"audio/MG0fCzLz9m4.mp3"},
 ];
 
 let queue=[],currentIdx=0,answers=[];
@@ -404,6 +421,9 @@ let progressInterval=null,currentStart=0,playAttemptTimeout=null;
 let playHealthInterval=null,lastPlayTime=0,stallCount=0,retryAttempted=false;
 const PLAY_SEC=35;
 let ytCheckMode=false,ytCheckQueue=[],ytCheckResults=null,ytCheckCurrent=null,ytCheckTimeout=null,ytCheckPending=false;
+const localAudio=document.getElementById('local-audio');
+let useLocal=false;
+let localPreparedSrc='',localPreparedStart=0;
 
 document.querySelectorAll('.count-btn').forEach(b=>b.addEventListener('click',()=>{
   document.querySelectorAll('.count-btn').forEach(x=>x.classList.remove('active'));
@@ -419,6 +439,28 @@ if(homeTitle){
   homeTitle.addEventListener('click',goHome);
   homeTitle.addEventListener('keydown',e=>{
     if(e.key==='Enter'||e.key===' '){e.preventDefault(); goHome();}
+  });
+}
+if(localAudio){
+  localAudio.addEventListener('play',()=>{
+    if(!useLocal) return;
+    isPlaying=true;
+    clearTimeout(playAttemptTimeout);
+    startTicker();
+  });
+  localAudio.addEventListener('pause',()=>{
+    if(!useLocal) return;
+    isPlaying=false;
+    stopTicker();
+  });
+  localAudio.addEventListener('ended',()=>{
+    if(!useLocal) return;
+    stopPlayback();
+    showEndHint();
+  });
+  localAudio.addEventListener('error',()=>{
+    if(!useLocal) return;
+    showPlayerError('Lokālais audio fails netika ielādēts. Atver YouTube.');
   });
 }
 const answerInput=document.getElementById('answer-input');
@@ -532,9 +574,23 @@ function loadQuestion(){
   currentYTUrl=buildYTUrl(w);
   document.getElementById('open-yt-btn').style.display='none';
   document.getElementById('yt-fallback').style.display='none';
+  useLocal=!!w.audioSrc;
+  if(useLocal && localAudio){
+    if(localAudio.src!==w.audioSrc) localAudio.src=w.audioSrc;
+    localAudio.preload='auto';
+    localPreparedSrc=w.audioSrc;
+    localPreparedStart=w.start||0;
+    localAudio.onloadedmetadata=()=>{
+      if(!useLocal) return;
+      if(localAudio.src.endsWith(localPreparedSrc)){
+        try{ localAudio.currentTime=localPreparedStart; }catch(e){}
+      }
+    };
+    try{ localAudio.load(); }catch(e){}
+  }
   currentStart=w.start;
   resetBar(); stopPlayback(); wave(false);
-  cueCurrent();
+  if(!useLocal) cueCurrent();
 }
 
 function resetBar(){
@@ -542,17 +598,32 @@ function resetBar(){
   f.style.transition='none'; f.style.width='100%';
 }
 
-function togglePlay(){isPlaying?stopPlayback():startPlayback();}
+function isActualPlaying(){
+  if(useLocal && localAudio){
+    return !localAudio.paused;
+  }
+  if(player&&player.getPlayerState){
+    return player.getPlayerState()===YT.PlayerState.PLAYING;
+  }
+  return false;
+}
+
+function togglePlay(){isActualPlaying()?stopPlayback():startPlayback();}
 
 function startPlayback(){
   hidePlayerError();
+  isPlaying=false;
+  const w=queue[currentIdx];
+  if(w && w.audioSrc){
+    startLocalPlayback(w);
+    return;
+  }
   if(!player||!playerReady){showPlayerError('Atskaņotājs vēl ielādējas…');return;}
   wave(true);
   const btn=document.getElementById('play-btn');
   btn.classList.add('playing');
   btn.innerHTML='<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
   document.getElementById('player-hint').textContent='Klausies…';
-  const w=queue[currentIdx];
   if(player&&player.unMute) player.unMute();
   if(player&&player.setVolume) player.setVolume(100);
   retryAttempted=false;
@@ -573,12 +644,48 @@ function startPlayback(){
   },2000);
 }
 
+function startLocalPlayback(w){
+  useLocal=true;
+  if(!localAudio){ showPlayerError('Lokālais atskaņotājs nav pieejams.'); return; }
+  wave(true);
+  const btn=document.getElementById('play-btn');
+  btn.classList.add('playing');
+  btn.innerHTML='<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
+  document.getElementById('player-hint').textContent='Klausies…';
+  const wantStart=w.start||0;
+  const sameSrc=localAudio.src&&localAudio.src.endsWith(w.audioSrc);
+  if(!sameSrc){ localAudio.src=w.audioSrc; }
+  const playFrom=()=>{
+    if(!(sameSrc && localPreparedSrc===w.audioSrc && localPreparedStart===wantStart)){
+      try{ localAudio.currentTime=wantStart; }catch(e){}
+    }
+    const p=localAudio.play();
+    if(p&&p.catch){ p.catch(()=>showPlayerError('Neizdevās atskaņot lokālo failu. Atver YouTube.')); }
+  };
+  if(localAudio.readyState>=2){
+    playFrom();
+  }else{
+    localAudio.oncanplay=()=>{ playFrom(); };
+    try{ localAudio.load(); }catch(e){}
+  }
+  clearTimeout(playAttemptTimeout);
+  playAttemptTimeout=setTimeout(()=>{
+    if(!isPlaying){
+      showPlayerError('Neizdevās iedarbināt atskaņošanu. Atver YouTube vai pārlādē lapu.');
+    }
+  },2000);
+}
+
 function stopPlayback(){
   isPlaying=false;
   clearTimeout(playAttemptTimeout);
   stopTicker();
   stopHealthCheck();
-  if(player&&player.pauseVideo)player.pauseVideo();
+  if(useLocal && localAudio){
+    try{ localAudio.pause(); }catch(e){}
+  }else{
+    if(player&&player.pauseVideo)player.pauseVideo();
+  }
   wave(false);
   const btn=document.getElementById('play-btn');
   btn.classList.remove('playing');
@@ -602,6 +709,7 @@ function stopTicker(){
 
 function startHealthCheck(){
   stopHealthCheck();
+  if(useLocal) return;
   if(!player||!playerReady) return;
   lastPlayTime=player.getCurrentTime()||0;
   stallCount=0;
@@ -641,8 +749,13 @@ function stopHealthCheck(){
 }
 
 function updateProgress(){
-  if(!player||!playerReady) return;
-  const t=player.getCurrentTime();
+  let t=0;
+  if(useLocal && localAudio){
+    t=localAudio.currentTime||0;
+  }else{
+    if(!player||!playerReady) return;
+    t=player.getCurrentTime();
+  }
   if(!isFinite(t)) return;
   const elapsed=Math.max(0,t-currentStart);
   const remaining=Math.max(0,PLAY_SEC-elapsed);
@@ -698,6 +811,8 @@ function startYTCheck(){
   ytCheckMode=true;
   ytCheckQueue=[...WORKS];
   ytCheckResults={ok:[],blocked:[],unknown:[]};
+  useLocal=false;
+  if(localAudio){ try{ localAudio.pause(); }catch(e){} }
   if(player&&player.mute) player.mute();
   updateYTCheckUI();
   nextYTCheck();
@@ -959,13 +1074,16 @@ function renderStats(history, opts={}){
   const sessionsEl=document.getElementById(opts.sessionsId||'stats-sessions');
   const weakEl=document.getElementById(opts.weakId||'stats-weak');
   const bestEl=opts.bestId?document.getElementById(opts.bestId):null;
+  const allEl=opts.allId?document.getElementById(opts.allId):null;
   if(sessionsEl) sessionsEl.innerHTML='';
   if(weakEl) weakEl.innerHTML='';
   if(bestEl) bestEl.innerHTML='';
+  if(allEl) allEl.innerHTML='';
   if(!history.length){
     if(sessionsEl) sessionsEl.innerHTML='<div class="stats-line">Nav saglabātu sesiju.</div>';
     if(weakEl) weakEl.innerHTML='<div class="stats-line">Nav datu.</div>';
     if(bestEl) bestEl.innerHTML='<div class="stats-line">Nav datu.</div>';
+    if(allEl) allEl.innerHTML='<div class="stats-line">Nav datu.</div>';
     return;
   }
   if(sessionsEl){
@@ -1002,6 +1120,10 @@ function renderStats(history, opts={}){
     if(a.acc!==b.acc) return b.acc-a.acc;
     return b.seen-a.seen;
   }).slice(0,5);
+  const allSorted=items.slice().sort((a,b)=>{
+    if(a.acc!==b.acc) return a.acc-b.acc;
+    return b.seen-a.seen;
+  });
   if(weakEl){
     if(!worst.length){
       weakEl.innerHTML='<div class="stats-line">Nav datu.</div>';
@@ -1019,6 +1141,16 @@ function renderStats(history, opts={}){
       best.forEach(it=>{
         const pct=Math.round(it.acc*100);
         bestEl.innerHTML+=`<div class="stats-line">${escapeHtml(it.label)} <span>${pct}% (${fmtScore(it.sum)}/${it.seen})</span></div>`;
+      });
+    }
+  }
+  if(allEl){
+    if(!allSorted.length){
+      allEl.innerHTML='<div class="stats-line">Nav datu.</div>';
+    }else{
+      allSorted.forEach(it=>{
+        const pct=Math.round(it.acc*100);
+        allEl.innerHTML+=`<div class="stats-line">${escapeHtml(it.label)} <span>${pct}% (${fmtScore(it.sum)}/${it.seen})</span></div>`;
       });
     }
   }
@@ -1056,9 +1188,20 @@ function openStats(){
   document.getElementById('quiz-screen').style.display='none';
   document.getElementById('review-screen').style.display='none';
   document.getElementById('results-screen').style.display='none';
+  document.getElementById('yt-check-screen').style.display='none';
   document.getElementById('stats-screen').style.display='block';
-  renderStats(loadHistory(),{sessionsId:'stats-sessions-main',weakId:'stats-weak-main',bestId:'stats-best-main'});
+  renderStats(loadHistory(),{sessionsId:'stats-sessions-main',weakId:'stats-weak-main',bestId:'stats-best-main',allId:'stats-all-main'});
+}
+
+function openYTCheck(){
+  document.getElementById('setup-screen').style.display='none';
+  document.getElementById('quiz-screen').style.display='none';
+  document.getElementById('review-screen').style.display='none';
+  document.getElementById('results-screen').style.display='none';
+  document.getElementById('stats-screen').style.display='none';
+  document.getElementById('yt-check-screen').style.display='block';
   updateYTCheckUI();
+  runYTCheck();
 }
 
 function goHome(){
@@ -1066,6 +1209,7 @@ function goHome(){
   document.getElementById('review-screen').style.display='none';
   document.getElementById('results-screen').style.display='none';
   document.getElementById('stats-screen').style.display='none';
+  document.getElementById('yt-check-screen').style.display='none';
   document.getElementById('setup-screen').style.display='flex';
   stopPlayback();
 }
