@@ -1,0 +1,10 @@
+.tabs {
+  display: flex;
+  gap: 8px;
+}
+.tabs button {
+  flex: 1;
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
