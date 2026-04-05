@@ -185,7 +185,7 @@ Script runs against Firebase using admin credentials from a local `.env` file �
 ## Known risks & open items
 
 1. **YouTube embed failures.** The current HTML has a "YT check" screen because some videos block embedding. Mitigation: the track-add form validates embedability on save and warns the user, suggesting an alternative source.
-2. **The missing 50th track.** Decision required during seeding (drop / re-download / YouTube-only). Not design-blocking.
+2. **All 50 tracks have audio files.** No missing audio — all MP3s present in legacy/audio/. Seeding can proceed directly without audio file decisions.
 3. **Firebase free tier.** Firestore 50k reads/day, Storage 5GB + 1GB/day download. 50 MP3s ≈ 100MB storage — trivial. Per-session reads are minimal. Safe for early users. Revisit if usage grows.
 4. **Vercel Hobby plan** has a 100MB deployment-size limit. Tracks live in Firebase Storage, not `/public`, so the build stays tiny. Only the 3 demo MP3s go into `/public/audio/`.
 5. **SEO/i18n.** `lang="lv"` on `<html>`, proper meta tags, OG image. No hreflang — no English version in Phase 1.
