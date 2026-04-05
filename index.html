@@ -226,7 +226,7 @@
     </div>
     <button class="start-btn" id="start-btn">Sākt treniņu →</button>
     <button class="secondary-btn" id="stats-btn" onclick="openStats()">Statistika</button>
-    <button class="secondary-btn" id="yt-check-home-btn" onclick="openYTCheck()">YouTube pārbaude</button>
+    <!-- <button class="secondary-btn" id="yt-check-home-btn" onclick="openYTCheck()">YouTube pārbaude</button> -->
   </div>
 
   <!-- STATS -->
@@ -256,7 +256,8 @@
     <button class="restart-btn" onclick="goHome()">← Atpakaļ uz sākumu</button>
   </div>
 
-  <!-- YT CHECK -->
+  <!-- YT CHECK (paslēpts) -->
+  <!--
   <div id="yt-check-screen">
     <div class="stats-header">
       <div class="stats-title-lg">YouTube pārbaude</div>
@@ -272,6 +273,7 @@
     </div>
     <button class="restart-btn" onclick="goHome()">← Atpakaļ uz sākumu</button>
   </div>
+  -->
 
   <!-- QUIZ -->
   <div id="quiz-screen">
@@ -476,6 +478,19 @@ if(answerInput){
     }
   });
 }
+document.addEventListener('keydown',e=>{
+  if(e.isComposing) return;
+  const quizVisible=document.getElementById('quiz-screen').style.display!=='none';
+  if(!quizVisible) return;
+  const t=e.target;
+  const tag=t&&t.tagName?t.tagName.toUpperCase():'';
+  if(tag==='INPUT'||tag==='TEXTAREA'||tag==='BUTTON'||tag==='SELECT') return;
+  if(t&&t.isContentEditable) return;
+  if(e.key===' '||e.code==='Space'||e.key==='Spacebar'){
+    e.preventDefault();
+    togglePlay();
+  }
+});
 
 function startQuiz(){
   let pool=selectedEra==='all'?[...WORKS]:WORKS.filter(w=>w.era==selectedEra);
@@ -647,6 +662,8 @@ function startPlayback(){
 function startLocalPlayback(w){
   useLocal=true;
   if(!localAudio){ showPlayerError('Lokālais atskaņotājs nav pieejams.'); return; }
+  localAudio.muted=false;
+  localAudio.volume=1;
   wave(true);
   const btn=document.getElementById('play-btn');
   btn.classList.add('playing');
@@ -681,11 +698,10 @@ function stopPlayback(){
   clearTimeout(playAttemptTimeout);
   stopTicker();
   stopHealthCheck();
-  if(useLocal && localAudio){
+  if(localAudio){
     try{ localAudio.pause(); }catch(e){}
-  }else{
-    if(player&&player.pauseVideo)player.pauseVideo();
   }
+  if(player&&player.pauseVideo)player.pauseVideo();
   wave(false);
   const btn=document.getElementById('play-btn');
   btn.classList.remove('playing');
@@ -1183,34 +1199,39 @@ function escapeHtml(s){
   }[ch]));
 }
 
+function setDisplay(id, value){
+  const el=document.getElementById(id);
+  if(el) el.style.display=value;
+}
+
 function openStats(){
-  document.getElementById('setup-screen').style.display='none';
-  document.getElementById('quiz-screen').style.display='none';
-  document.getElementById('review-screen').style.display='none';
-  document.getElementById('results-screen').style.display='none';
-  document.getElementById('yt-check-screen').style.display='none';
-  document.getElementById('stats-screen').style.display='block';
+  setDisplay('setup-screen','none');
+  setDisplay('quiz-screen','none');
+  setDisplay('review-screen','none');
+  setDisplay('results-screen','none');
+  setDisplay('yt-check-screen','none');
+  setDisplay('stats-screen','block');
   renderStats(loadHistory(),{sessionsId:'stats-sessions-main',weakId:'stats-weak-main',bestId:'stats-best-main',allId:'stats-all-main'});
 }
 
 function openYTCheck(){
-  document.getElementById('setup-screen').style.display='none';
-  document.getElementById('quiz-screen').style.display='none';
-  document.getElementById('review-screen').style.display='none';
-  document.getElementById('results-screen').style.display='none';
-  document.getElementById('stats-screen').style.display='none';
-  document.getElementById('yt-check-screen').style.display='block';
+  setDisplay('setup-screen','none');
+  setDisplay('quiz-screen','none');
+  setDisplay('review-screen','none');
+  setDisplay('results-screen','none');
+  setDisplay('stats-screen','none');
+  setDisplay('yt-check-screen','block');
   updateYTCheckUI();
   runYTCheck();
 }
 
 function goHome(){
-  document.getElementById('quiz-screen').style.display='none';
-  document.getElementById('review-screen').style.display='none';
-  document.getElementById('results-screen').style.display='none';
-  document.getElementById('stats-screen').style.display='none';
-  document.getElementById('yt-check-screen').style.display='none';
-  document.getElementById('setup-screen').style.display='flex';
+  setDisplay('quiz-screen','none');
+  setDisplay('review-screen','none');
+  setDisplay('results-screen','none');
+  setDisplay('stats-screen','none');
+  setDisplay('yt-check-screen','none');
+  setDisplay('setup-screen','flex');
   stopPlayback();
 }
 
