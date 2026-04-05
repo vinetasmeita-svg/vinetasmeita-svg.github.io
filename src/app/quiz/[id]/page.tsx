@@ -121,7 +121,7 @@ function EditQuizInner() {
         <button type="button" className="primary" onClick={onSave} disabled={saving} style={{ flex: 1 }}>
           {saving ? lv.common.loading : lv.quiz.save}
         </button>
-        <Link href={`/quiz/${quiz.id}/spēlēt`} style={{ flex: 1 }}>
+        <Link href={`/quiz/${quiz.id}/spelet`} style={{ flex: 1 }}>
           <button type="button" style={{ width: '100%' }}>{lv.quiz.play}</button>
         </Link>
       </div>

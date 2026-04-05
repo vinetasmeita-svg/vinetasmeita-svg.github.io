@@ -118,7 +118,7 @@ function Inner() {
         {attempts && attempts.map((a) => {
           const pct = a.data.totalQuestions ? Math.round((a.data.totalScore / a.data.totalQuestions) * 100) : 0;
           return (
-            <Link key={a.id} href={`/quiz/${a.data.quizId}/rezultāti/${a.id}`} style={{ display: 'flex', justifyContent: 'space-between', padding: 8, borderBottom: '1px solid var(--border)' }}>
+            <Link key={a.id} href={`/quiz/${a.data.quizId}/rezultati/${a.id}`} style={{ display: 'flex', justifyContent: 'space-between', padding: 8, borderBottom: '1px solid var(--border)' }}>
               <span>{a.data.quizTitleSnapshot}</span>
               <span className="muted">{pct}% · {new Date(a.data.finishedAt).toLocaleDateString('lv-LV')}</span>
             </Link>

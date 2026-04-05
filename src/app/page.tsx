@@ -19,7 +19,7 @@ export default function HomePage() {
       <DemoQuiz />
 
       <section style={{ textAlign: 'center' }}>
-        <Link href="/reģistrēties">
+        <Link href="/registreties">
           <button type="button" className="primary">{lv.landing.ctaRegister}</button>
         </Link>
       </section>

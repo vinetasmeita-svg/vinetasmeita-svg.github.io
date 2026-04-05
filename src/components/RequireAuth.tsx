@@ -11,7 +11,7 @@ export default function RequireAuth({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!loading && !user) {
-      router.replace('/ienākt');
+      router.replace('/ienakt');
     }
   }, [loading, user, router]);
 

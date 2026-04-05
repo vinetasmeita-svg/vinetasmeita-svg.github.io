@@ -73,7 +73,7 @@ export default function DemoQuiz() {
           ))}
         </ul>
         <p style={{ textAlign: 'center' }}>{lv.landing.ctaRegister}</p>
-        <Link href="/reģistrēties">
+        <Link href="/registreties">
           <button type="button" className="primary" style={{ width: '100%' }}>{lv.nav.register}</button>
         </Link>
         <button type="button" onClick={start}>{lv.results.playAgain}</button>

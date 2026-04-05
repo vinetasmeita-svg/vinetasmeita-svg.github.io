@@ -1,0 +1,26 @@
+.header {
+  width: 100%;
+  max-width: 700px;
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+  border-bottom: 1px solid var(--border);
+}
+.brand {
+  font-family: var(--font-playfair), serif;
+  font-size: 18px;
+  color: var(--text);
+}
+.nav {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  font-size: 12px;
+}
+.nav button {
+  padding: 6px 12px;
+  font-size: 12px;
+}
