@@ -1,4 +1,4 @@
-import { describe, it, beforeAll, afterAll, beforeEach, expect } from 'vitest';
+import { describe, it, beforeAll, afterAll, beforeEach } from 'vitest';
 import {
   initializeTestEnvironment,
   RulesTestEnvironment,
