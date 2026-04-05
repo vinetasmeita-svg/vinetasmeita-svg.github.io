@@ -67,7 +67,20 @@ export default function QuizPlayer({ questions, onFinish }: Props) {
       <p className="muted">{lv.quiz.questionOf(idx + 1, questions.length)}</p>
 
       {track.source === 'library' && audioUrl && (
-        <audio ref={audioRef} src={audioUrl} controls autoPlay preload="auto" />
+        <audio
+          ref={audioRef}
+          src={audioUrl}
+          controls
+          autoPlay
+          preload="auto"
+          onLoadedMetadata={(e) => {
+            // Seek to the track's start offset. The legacy exam list specifies
+            // exact timestamps (e.g. 22:50 for Mocarts 40 III d. menuets) — full
+            // MP3s are uploaded once and we jump to the right position per track.
+            const start = track.ytStart ?? 0;
+            if (start > 0) e.currentTarget.currentTime = start;
+          }}
+        />
       )}
       {track.source === 'library' && !audioUrl && <p>{lv.common.loading}</p>}
       {track.source === 'youtube' && track.ytId && (

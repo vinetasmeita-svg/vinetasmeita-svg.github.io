@@ -85,7 +85,16 @@ export default function DemoQuiz() {
   return (
     <div className="card stack">
       <p className="muted">{lv.quiz.questionOf(idx + 1, DEMO_TRACKS.length)}</p>
-      <audio ref={audioRef} src={track.audioPath} controls preload="auto" />
+      <audio
+        ref={audioRef}
+        src={track.audioPath}
+        controls
+        preload="auto"
+        onLoadedMetadata={(e) => {
+          const start = track.ytStart ?? 0;
+          if (start > 0) e.currentTarget.currentTime = start;
+        }}
+      />
       <div>
         <label htmlFor="demo-answer">{lv.quiz.answerPlaceholder}</label>
         <textarea
