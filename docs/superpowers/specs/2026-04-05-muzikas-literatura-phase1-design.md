@@ -171,7 +171,7 @@ One-shot script at `scripts/seed-tracks.ts`:
 1. Reads track list from a cleaned-up JSON extracted from `index.html`.
 2. Uploads each MP3 to Firebase Storage under `tracks/{originalFilename}`.
 3. Creates a `tracks/{id}` Firestore doc per track.
-4. Creates one `quizzes/{id}` doc with `isTemplate: true`, title `"Rīgas 3. mūzikas vidusskola — 12. klase"`, referencing the seeded tracks.
+4. Creates one `quizzes/{id}` doc with `isTemplate: true`, title `"JMV 12.kl. 25/26"`, referencing the seeded tracks.
 5. Logs missing audio files so the owner can decide per track: drop, re-download, or keep as YouTube-only.
 
 Script runs against Firebase using admin credentials from a local `.env` file — never committed, never deployed.
