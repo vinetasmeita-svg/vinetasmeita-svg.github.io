@@ -49,3 +49,5 @@ ui-debug.log
 
 # Firebase service account (never commit)
 serviceAccount*.json
+*firebase-adminsdk*.json
+*-service-account*.json
