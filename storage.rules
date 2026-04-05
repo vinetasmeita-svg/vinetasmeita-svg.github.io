@@ -1,0 +1,11 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Track audio: read by any signed-in user; write only via admin SDK
+    // (seed script / admin), so no client-side write rule needed.
+    match /tracks/{file=**} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+  }
+}
