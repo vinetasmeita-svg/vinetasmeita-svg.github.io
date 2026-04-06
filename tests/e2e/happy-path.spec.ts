@@ -1,7 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-// Smoke test: loads the landing page, plays through the 3-track demo,
-// and verifies the results screen appears.
+// Smoke test: plays the 3-track demo (intro → play → review → results).
 test('landing-page demo plays through to results', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
@@ -14,5 +13,9 @@ test('landing-page demo plays through to results', async ({ page }) => {
     await btn.click();
   }
 
-  await expect(page.getByText('Rezultāti')).toBeVisible();
+  // Review phase — finalize without changing auto-grades
+  await expect(page.getByRole('heading', { name: /Pārskats/ })).toBeVisible();
+  await page.getByRole('button', { name: /Pabeigt/ }).click();
+
+  await expect(page.getByRole('heading', { name: /Rezultāti/ })).toBeVisible();
 });

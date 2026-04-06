@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth/context';
@@ -16,10 +16,11 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  if (user) {
-    router.replace('/profils');
-    return null;
-  }
+  useEffect(() => {
+    if (user) router.replace('/profils');
+  }, [user, router]);
+
+  if (user) return null;
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();

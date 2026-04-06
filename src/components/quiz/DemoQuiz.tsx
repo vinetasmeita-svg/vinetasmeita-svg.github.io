@@ -9,7 +9,7 @@ import type { AttemptResult, AttemptVerdict } from '@/lib/types';
 import { lv } from '@/lib/i18n/lv';
 import styles from './DemoQuiz.module.css';
 
-type Phase = 'intro' | 'playing' | 'done';
+type Phase = 'intro' | 'playing' | 'review' | 'done';
 
 export default function DemoQuiz() {
   const [phase, setPhase] = useState<Phase>('intro');
@@ -40,10 +40,16 @@ export default function DemoQuiz() {
     setResults(nextResults);
     setAnswer('');
     if (idx + 1 >= DEMO_TRACKS.length) {
-      setPhase('done');
+      setPhase('review');
     } else {
       setIdx(idx + 1);
     }
+  };
+
+  const setVerdict = (i: number, v: AttemptVerdict) => {
+    setResults((prev) =>
+      prev.map((r, rIdx) => (rIdx === i ? { ...r, verdict: v, score: verdictToScore(v) } : r)),
+    );
   };
 
   if (phase === 'intro') {
@@ -58,12 +64,66 @@ export default function DemoQuiz() {
     );
   }
 
+  if (phase === 'review') {
+    return (
+      <div className="card stack">
+        <h2>{lv.review.title}</h2>
+        <p className="muted">
+          Novērtē katru atbildi: pareiza (1), daļēji (½) vai nepareiza (0).
+        </p>
+        <ul className={styles.resultList}>
+          {results.map((r, i) => (
+            <li key={i} className={styles[r.verdict]}>
+              <div><strong>{lv.review.correctAnswer}:</strong> {r.quizTrack.title}</div>
+              <div className="muted">{lv.review.yourAnswer}: {r.userAnswer || '—'}</div>
+              <div style={{ display: 'flex', gap: 4, marginTop: 8 }}>
+                <button
+                  type="button"
+                  className={r.verdict === 'correct' ? 'primary' : ''}
+                  onClick={() => setVerdict(i, 'correct')}
+                  style={{ flex: 1, fontSize: 11 }}
+                >
+                  ✓ {lv.review.grade}
+                </button>
+                <button
+                  type="button"
+                  className={r.verdict === 'partial' ? 'primary' : ''}
+                  onClick={() => setVerdict(i, 'partial')}
+                  style={{ flex: 1, fontSize: 11 }}
+                >
+                  ½ {lv.review.gradePartial}
+                </button>
+                <button
+                  type="button"
+                  className={r.verdict === 'wrong' ? 'primary' : ''}
+                  onClick={() => setVerdict(i, 'wrong')}
+                  style={{ flex: 1, fontSize: 11 }}
+                >
+                  ✗ {lv.review.gradeWrong}
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+        <button type="button" className="primary" onClick={() => setPhase('done')}>
+          {lv.review.finish}
+        </button>
+      </div>
+    );
+  }
+
   if (phase === 'done') {
     const s = summarizeResults(results);
+    const pct = s.totalQuestions > 0 ? Math.round((s.totalScore / s.totalQuestions) * 100) : 0;
     return (
       <div className="card stack">
         <h2>{lv.results.title}</h2>
-        <p>{lv.results.correctCount(s.correctCount)} / {s.totalQuestions}</p>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: 48, fontFamily: 'var(--font-playfair), serif' }}>{pct}%</div>
+          <div className="muted">
+            {lv.results.correctCount(s.correctCount)} · {lv.results.partialCount(s.partialCount)} · {lv.results.wrongCount(s.wrongCount + s.skippedCount)}
+          </div>
+        </div>
         <ul className={styles.resultList}>
           {results.map((r, i) => (
             <li key={i} className={styles[r.verdict]}>
@@ -101,7 +161,14 @@ export default function DemoQuiz() {
           id="demo-answer"
           value={answer}
           onChange={(e) => setAnswer(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              submit();
+            }
+          }}
           rows={3}
+          autoFocus
         />
       </div>
       <button type="button" className="primary" onClick={submit}>

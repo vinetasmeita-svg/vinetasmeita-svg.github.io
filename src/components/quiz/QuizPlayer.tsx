@@ -95,7 +95,20 @@ export default function QuizPlayer({ questions, onFinish }: Props) {
 
       <div>
         <label htmlFor="ans">{lv.quiz.answerPlaceholder}</label>
-        <textarea id="ans" value={answer} onChange={(e) => setAnswer(e.target.value)} rows={3} />
+        <textarea
+          id="ans"
+          value={answer}
+          onChange={(e) => setAnswer(e.target.value)}
+          onKeyDown={(e) => {
+            // Enter submits, Shift+Enter inserts a newline.
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              commit();
+            }
+          }}
+          rows={3}
+          autoFocus
+        />
       </div>
 
       <div style={{ display: 'flex', gap: 8 }}>
