@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import RequireAuth from '@/components/RequireAuth';
+import ErrorBox from '@/components/ErrorBox';
 import { useAuth } from '@/lib/auth/context';
-import { listTracks, type WithId } from '@/lib/queries';
+import { listTracks } from '@/lib/queries';
+import { useAsync } from '@/lib/useAsync';
 import { getSignedAudioUrl } from '@/server/tracks';
-import type { TrackDoc } from '@/lib/types';
 import { ERAS, eraName } from '@/lib/eras';
 import { lv } from '@/lib/i18n/lv';
 import styles from './page.module.css';
@@ -32,20 +33,16 @@ function splitTitle(title: string): { composer: string; work: string } {
 
 function LibraryInner() {
   const { user, getIdToken } = useAuth();
-  const [tracks, setTracks] = useState<WithId<TrackDoc>[] | null>(null);
+  const tracksQ = useAsync(() => listTracks(), []);
   const [search, setSearch] = useState('');
   const [eraFilter, setEraFilter] = useState<number | 'all'>('all');
   // Audio URLs are fetched on-demand when user clicks play on a row.
   const [audioUrls, setAudioUrls] = useState<Record<string, string>>({});
   const [loadingAudio, setLoadingAudio] = useState<string | null>(null);
 
-  useEffect(() => {
-    listTracks().then(setTracks).catch(console.error);
-  }, []);
-
   const filtered = useMemo(() => {
-    if (!tracks) return [];
-    return tracks.filter((t) => {
+    if (!tracksQ.data) return [];
+    return tracksQ.data.filter((t) => {
       if (eraFilter !== 'all' && t.data.era !== eraFilter) return false;
       if (search) {
         const q = search.toLowerCase();
@@ -57,7 +54,7 @@ function LibraryInner() {
       }
       return true;
     });
-  }, [tracks, search, eraFilter]);
+  }, [tracksQ.data, search, eraFilter]);
 
   const loadAudio = async (trackId: string, audioPath: string) => {
     if (audioUrls[trackId] || loadingAudio) return;
@@ -75,7 +72,9 @@ function LibraryInner() {
     }
   };
 
-  if (!tracks) return <p>{lv.common.loading}</p>;
+  if (tracksQ.loading) return <p>{lv.common.loading}</p>;
+  if (tracksQ.error) return <ErrorBox error={tracksQ.error} />;
+  const tracks = tracksQ.data ?? [];
 
   return (
     <div className="stack">

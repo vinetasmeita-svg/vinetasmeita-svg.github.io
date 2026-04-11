@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import RequireAuth from '@/components/RequireAuth';
-import { listMyQuizzes, listTemplates, type WithId } from '@/lib/queries';
+import ErrorBox from '@/components/ErrorBox';
+import { listMyQuizzes, listTemplates } from '@/lib/queries';
+import { useAsync } from '@/lib/useAsync';
 import { useAuth } from '@/lib/auth/context';
 import { cloneTemplate } from '@/server/quizzes';
-import type { QuizDoc } from '@/lib/types';
 import { lv } from '@/lib/i18n/lv';
 import { useRouter } from 'next/navigation';
 import styles from './page.module.css';
@@ -23,14 +24,13 @@ function QuizListInner() {
   const { user, getIdToken } = useAuth();
   const router = useRouter();
   const [tab, setTab] = useState<'mine' | 'templates'>('mine');
-  const [mine, setMine] = useState<WithId<QuizDoc>[] | null>(null);
-  const [templates, setTemplates] = useState<WithId<QuizDoc>[] | null>(null);
 
-  useEffect(() => {
-    if (!user) return;
-    listMyQuizzes(user.uid).then(setMine).catch(console.error);
-    listTemplates().then(setTemplates).catch(console.error);
-  }, [user]);
+  const uid = user?.uid ?? null;
+  const mineQ = useAsync(
+    () => (uid ? listMyQuizzes(uid) : Promise.resolve([])),
+    [uid],
+  );
+  const templatesQ = useAsync(() => listTemplates(), []);
 
   const onClone = async (templateId: string) => {
     const token = await getIdToken();
@@ -56,9 +56,12 @@ function QuizListInner() {
           <Link href="/quiz/jauns">
             <button type="button" className="primary" style={{ width: '100%' }}>{lv.quiz.createNew}</button>
           </Link>
-          {mine === null && <p>{lv.common.loading}</p>}
-          {mine && mine.length === 0 && <p className="muted">{lv.quiz.emptyState}</p>}
-          {mine && mine.map((q) => (
+          {mineQ.loading && <p>{lv.common.loading}</p>}
+          {mineQ.error && <ErrorBox error={mineQ.error} />}
+          {!mineQ.loading && !mineQ.error && mineQ.data?.length === 0 && (
+            <p className="muted">{lv.quiz.emptyState}</p>
+          )}
+          {mineQ.data?.map((q) => (
             <Link key={q.id} href={`/quiz/${q.id}`} className="card" style={{ display: 'block' }}>
               <div>{q.data.title}</div>
               <div className="muted">{q.data.tracks.length} skaņdarbi</div>
@@ -69,9 +72,12 @@ function QuizListInner() {
 
       {tab === 'templates' && (
         <div className="stack">
-          {templates === null && <p>{lv.common.loading}</p>}
-          {templates && templates.length === 0 && <p className="muted">Nav pieejamu sagatavju.</p>}
-          {templates && templates.map((q) => (
+          {templatesQ.loading && <p>{lv.common.loading}</p>}
+          {templatesQ.error && <ErrorBox error={templatesQ.error} />}
+          {!templatesQ.loading && !templatesQ.error && templatesQ.data?.length === 0 && (
+            <p className="muted">Nav pieejamu sagatavju.</p>
+          )}
+          {templatesQ.data?.map((q) => (
             <div key={q.id} className="card stack">
               <div>{q.data.title}</div>
               <div className="muted">{q.data.tracks.length} skaņdarbi</div>

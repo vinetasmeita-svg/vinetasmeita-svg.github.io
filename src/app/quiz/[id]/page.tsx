@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import RequireAuth from '@/components/RequireAuth';
+import ErrorBox from '@/components/ErrorBox';
 import TrackPicker from '@/components/quiz/TrackPicker';
 import { useAuth } from '@/lib/auth/context';
 import { getQuiz, type WithId } from '@/lib/queries';
@@ -26,6 +27,7 @@ function EditQuizInner() {
   const { user, getIdToken } = useAuth();
 
   const [quiz, setQuiz] = useState<WithId<QuizDoc> | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [tracks, setTracks] = useState<QuizTrack[]>([]);
@@ -35,16 +37,24 @@ function EditQuizInner() {
 
   useEffect(() => {
     if (!params.id) return;
-    getQuiz(params.id).then((q) => {
-      if (!q) { router.replace('/quiz'); return; }
-      if (user && q.data.ownerId !== user.uid) { router.replace('/quiz'); return; }
-      setQuiz(q);
-      setTitle(q.data.title);
-      setDescription(q.data.description);
-      setTracks(q.data.tracks);
-    });
+    setLoadError(null);
+    getQuiz(params.id)
+      .then((q) => {
+        if (!q) { router.replace('/quiz'); return; }
+        if (user && q.data.ownerId !== user.uid) { router.replace('/quiz'); return; }
+        setQuiz(q);
+        setTitle(q.data.title);
+        setDescription(q.data.description);
+        setTracks(q.data.tracks);
+      })
+      .catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error('getQuiz failed:', err);
+        setLoadError(msg);
+      });
   }, [params.id, user, router]);
 
+  if (loadError) return <ErrorBox error={loadError} />;
   if (!quiz) return <p>{lv.common.loading}</p>;
 
   const onSave = async () => {

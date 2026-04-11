@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import Link from 'next/link';
 import RequireAuth from '@/components/RequireAuth';
+import ErrorBox from '@/components/ErrorBox';
 import { useAuth } from '@/lib/auth/context';
-import { listMyQuizzes, listMyAttempts, type WithId } from '@/lib/queries';
-import type { QuizDoc, AttemptDoc } from '@/lib/types';
+import { listMyQuizzes, listMyAttempts } from '@/lib/queries';
+import { useAsync } from '@/lib/useAsync';
 import { eraName } from '@/lib/eras';
 import { lv } from '@/lib/i18n/lv';
 
@@ -19,14 +20,18 @@ export default function ProfilePage() {
 
 function Inner() {
   const { user, userDoc } = useAuth();
-  const [quizzes, setQuizzes] = useState<WithId<QuizDoc>[] | null>(null);
-  const [attempts, setAttempts] = useState<WithId<AttemptDoc>[] | null>(null);
+  const uid = user?.uid ?? null;
 
-  useEffect(() => {
-    if (!user) return;
-    listMyQuizzes(user.uid).then(setQuizzes);
-    listMyAttempts(user.uid).then(setAttempts);
-  }, [user]);
+  const quizzesQ = useAsync(
+    () => (uid ? listMyQuizzes(uid) : Promise.resolve([])),
+    [uid],
+  );
+  const attemptsQ = useAsync(
+    () => (uid ? listMyAttempts(uid) : Promise.resolve([])),
+    [uid],
+  );
+  const quizzes = quizzesQ.data;
+  const attempts = attemptsQ.data;
 
   const stats = useMemo(() => {
     if (!attempts) return null;
@@ -88,9 +93,12 @@ function Inner() {
 
       <div className="card stack">
         <h2>{lv.profile.myQuizzes}</h2>
-        {quizzes === null && <p>{lv.common.loading}</p>}
-        {quizzes && quizzes.length === 0 && <p className="muted">{lv.quiz.emptyState}</p>}
-        {quizzes && quizzes.map((q) => (
+        {quizzesQ.loading && <p>{lv.common.loading}</p>}
+        {quizzesQ.error && <ErrorBox error={quizzesQ.error} />}
+        {!quizzesQ.loading && !quizzesQ.error && quizzes?.length === 0 && (
+          <p className="muted">{lv.quiz.emptyState}</p>
+        )}
+        {quizzes?.map((q) => (
           <Link key={q.id} href={`/quiz/${q.id}`} style={{ display: 'block', padding: 8, borderBottom: '1px solid var(--border)' }}>
             {q.data.title} <span className="muted">({q.data.tracks.length})</span>
           </Link>
@@ -113,9 +121,12 @@ function Inner() {
 
       <div className="card stack">
         <h2>{lv.profile.attemptHistory}</h2>
-        {attempts === null && <p>{lv.common.loading}</p>}
-        {attempts && attempts.length === 0 && <p className="muted">{lv.profile.noAttemptsYet}</p>}
-        {attempts && attempts.map((a) => {
+        {attemptsQ.loading && <p>{lv.common.loading}</p>}
+        {attemptsQ.error && <ErrorBox error={attemptsQ.error} />}
+        {!attemptsQ.loading && !attemptsQ.error && attempts?.length === 0 && (
+          <p className="muted">{lv.profile.noAttemptsYet}</p>
+        )}
+        {attempts?.map((a) => {
           const pct = a.data.totalQuestions ? Math.round((a.data.totalScore / a.data.totalQuestions) * 100) : 0;
           return (
             <Link key={a.id} href={`/quiz/${a.data.quizId}/rezultati/${a.id}`} style={{ display: 'flex', justifyContent: 'space-between', padding: 8, borderBottom: '1px solid var(--border)' }}>

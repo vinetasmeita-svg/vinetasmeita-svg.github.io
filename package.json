@@ -12,6 +12,7 @@
     "test:e2e": "playwright test",
     "seed": "tsx scripts/seed-firebase.ts",
     "deploy:rules": "tsx scripts/deploy-rules.ts",
+    "deploy:indexes": "tsx scripts/deploy-indexes.ts",
     "diagnose": "tsx scripts/diagnose-firebase.ts"
   },
   "dependencies": {
