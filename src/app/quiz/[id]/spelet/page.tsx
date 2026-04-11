@@ -3,15 +3,20 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import RequireAuth from '@/components/RequireAuth';
-import QuizSetup from '@/components/quiz/QuizSetup';
+import QuizSetup, { type SamplingMode } from '@/components/quiz/QuizSetup';
 import QuizPlayer from '@/components/quiz/QuizPlayer';
 import ReviewScreen from '@/components/quiz/ReviewScreen';
 import ResultsScreen from '@/components/quiz/ResultsScreen';
 import { useAuth } from '@/lib/auth/context';
-import { getQuiz, type WithId } from '@/lib/queries';
+import { getQuiz, listMyAttempts, type WithId } from '@/lib/queries';
 import { saveAttempt } from '@/server/attempts';
-import { filterByEras, pickQuestions } from '@/lib/scoring';
-import type { QuizDoc, QuizTrack, AttemptResult, EraId } from '@/lib/types';
+import {
+  filterByEras,
+  pickQuestions,
+  pickQuestionsWeighted,
+  computeTrackStats,
+} from '@/lib/scoring';
+import type { QuizDoc, QuizTrack, AttemptResult, AttemptDoc, EraId } from '@/lib/types';
 import { lv } from '@/lib/i18n/lv';
 
 type Phase = 'setup' | 'playing' | 'review' | 'results';
@@ -26,8 +31,9 @@ export default function PlayQuizPage() {
 
 function PlayInner() {
   const params = useParams<{ id: string }>();
-  const { getIdToken } = useAuth();
+  const { user, getIdToken } = useAuth();
   const [quiz, setQuiz] = useState<WithId<QuizDoc> | null>(null);
+  const [attempts, setAttempts] = useState<WithId<AttemptDoc>[]>([]);
   const [phase, setPhase] = useState<Phase>('setup');
   const [questions, setQuestions] = useState<QuizTrack[]>([]);
   const [rawResults, setRawResults] = useState<AttemptResult[]>([]);
@@ -38,11 +44,22 @@ function PlayInner() {
     if (params.id) getQuiz(params.id).then(setQuiz);
   }, [params.id]);
 
+  useEffect(() => {
+    if (user) listMyAttempts(user.uid, 200).then(setAttempts);
+  }, [user]);
+
   if (!quiz) return <p>{lv.common.loading}</p>;
 
-  const startPlaying = (count: number, eras: EraId[]) => {
+  const startPlaying = (count: number, eras: EraId[], mode: SamplingMode) => {
     const pool = filterByEras(quiz.data.tracks, eras);
-    const picked = pickQuestions(pool, count);
+    const picked =
+      mode === 'weighted'
+        ? pickQuestionsWeighted(
+            pool,
+            count,
+            computeTrackStats(attempts.map((a) => ({ results: a.data.results }))),
+          )
+        : pickQuestions(pool, count);
     setQuestions(picked);
     setStartedAt(Date.now());
     setPhase('playing');

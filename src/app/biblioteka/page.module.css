@@ -1,0 +1,90 @@
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.table thead th {
+  text-align: left;
+  font-family: var(--font-dm-mono), monospace;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--accent);
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.table tbody td {
+  padding: 12px 8px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.table tbody tr:hover {
+  background: rgba(200, 169, 110, 0.04);
+}
+
+.composer {
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  min-width: 110px;
+}
+
+.work {
+  color: var(--text);
+}
+
+.era {
+  color: var(--muted);
+  font-size: 10px;
+  white-space: nowrap;
+  min-width: 90px;
+}
+
+.audio {
+  min-width: 180px;
+  text-align: right;
+}
+
+.audio audio {
+  width: 100%;
+  max-width: 260px;
+  height: 32px;
+}
+
+.audio button {
+  font-size: 11px;
+  padding: 6px 12px;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .table,
+  .table thead,
+  .table tbody,
+  .table tr,
+  .table td,
+  .table th {
+    display: block;
+  }
+  .table thead {
+    display: none;
+  }
+  .table tbody tr {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .table tbody td {
+    padding: 4px 0;
+    border: none;
+  }
+  .composer {
+    font-size: 13px;
+  }
+  .audio {
+    text-align: left;
+  }
+}

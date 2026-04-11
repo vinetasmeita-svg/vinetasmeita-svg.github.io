@@ -1,7 +1,8 @@
 // One-shot: upload legacy MP3s to Firebase Storage, create tracks/*
 // Firestore docs, and create one template quiz containing all of them.
 // Requires FIREBASE_ADMIN_* and NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET in .env.local.
-import 'dotenv/config';
+import { config as dotenvConfig } from 'dotenv';
+dotenvConfig({ path: '.env.local' });
 import fs from 'node:fs';
 import path from 'node:path';
 import { initializeApp, cert } from 'firebase-admin/app';

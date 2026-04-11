@@ -10,7 +10,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "seed": "tsx scripts/seed-firebase.ts"
+    "seed": "tsx scripts/seed-firebase.ts",
+    "deploy:rules": "tsx scripts/deploy-rules.ts",
+    "diagnose": "tsx scripts/diagnose-firebase.ts"
   },
   "dependencies": {
     "firebase": "^12.11.0",

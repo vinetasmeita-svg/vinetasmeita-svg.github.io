@@ -19,7 +19,7 @@ export const DEMO_TRACKS: QuizTrack[] = [
     title: 'V.A. Mocarts — 40. simfonija: III d. menueta tēma',
     era: 1,
     audioPath: '/audio/demo2.mp3',
-    ytStart: 1807,
+    ytStart: 1370,
     correctAnswer: 'V.A. Mocarts — 40. simfonija: III d. menueta tēma',
   },
   {

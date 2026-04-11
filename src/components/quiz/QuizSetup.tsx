@@ -5,17 +5,20 @@ import type { QuizTrack, EraId } from '@/lib/types';
 import { ERAS } from '@/lib/eras';
 import { lv } from '@/lib/i18n/lv';
 
+export type SamplingMode = 'weighted' | 'random';
+
 interface Props {
   tracks: QuizTrack[];
-  onStart: (count: number, eras: EraId[]) => void;
+  onStart: (count: number, eras: EraId[], mode: SamplingMode) => void;
 }
 
-const COUNT_OPTIONS = [5, 10, 20, 50];
+const COUNT_OPTIONS = [5, 10, 15, 20, 50];
 
 export default function QuizSetup({ tracks, onStart }: Props) {
   const availableEras = Array.from(new Set(tracks.map((t) => t.era))) as EraId[];
-  const [count, setCount] = useState(10);
+  const [count, setCount] = useState(15);
   const [selectedEras, setSelectedEras] = useState<EraId[]>(availableEras);
+  const [mode, setMode] = useState<SamplingMode>('weighted');
 
   const toggleEra = (id: EraId) => {
     setSelectedEras((prev) => prev.includes(id) ? prev.filter((e) => e !== id) : [...prev, id]);
@@ -33,6 +36,31 @@ export default function QuizSetup({ tracks, onStart }: Props) {
           </button>
         ))}
       </div>
+
+      <h2>Treniņa režīms</h2>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button
+          type="button"
+          className={mode === 'weighted' ? 'primary' : ''}
+          onClick={() => setMode('weighted')}
+          style={{ flex: 1, fontSize: 11 }}
+        >
+          Vājākie biežāk
+        </button>
+        <button
+          type="button"
+          className={mode === 'random' ? 'primary' : ''}
+          onClick={() => setMode('random')}
+          style={{ flex: 1, fontSize: 11 }}
+        >
+          Nejauši
+        </button>
+      </div>
+      <p className="muted">
+        {mode === 'weighted'
+          ? 'Skaņdarbi, kuros līdz šim kļūdīts, parādīsies biežāk.'
+          : 'Visi skaņdarbi ar vienādu varbūtību.'}
+      </p>
 
       <h2>{lv.quiz.filterByEra}</h2>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
@@ -53,7 +81,7 @@ export default function QuizSetup({ tracks, onStart }: Props) {
         type="button"
         className="primary"
         disabled={selectedEras.length === 0 || maxCount === 0}
-        onClick={() => onStart(Math.min(count, maxCount), selectedEras)}
+        onClick={() => onStart(Math.min(count, maxCount), selectedEras, mode)}
       >
         {lv.quiz.start}
       </button>
